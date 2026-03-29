@@ -1,0 +1,146 @@
+\documentclass[utf8]{ctexart}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{algorithm} 
+\usepackage{algorithmic}
+\usepackage{mdframed}
+\usepackage{tikz}
+\usetikzlibrary{graphs, positioning, arrows.meta}
+
+\geometry{a4paper, margin=2.5cm}
+
+% 定理环境
+\newtheoremstyle{mystyle}
+  {8pt}{8pt}{\kaishu}{0pt}{\bfseries}{}{1em}{}
+\theoremstyle{mystyle}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+
+% 好看的题目框
+\newmdenv[
+  linecolor=black!40,
+  linewidth=1pt,
+  backgroundcolor=gray!8,
+  roundcorner=5pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+]{problembox}
+
+\title{\textbf{离散数学2\quad 作业5}}
+\date{\today}
+\author{李子嘉 2024012325}
+\begin{document}
+\maketitle
+
+\section*{题目1}
+
+\begin{problembox}
+用便宜算法求解图2.48中旅行商问题的解，并写出回路T中顶点的扩展过程。
+\end{problembox}
+\textbf{解：} 首先，我们需要构建图2.48的距离矩阵。假设图中有5个顶点，距离矩阵如下：
+$$
+\begin{bmatrix}
+0 & 3 & 8 & 4 & 7 \\
+3 & 0 & 10 & 9 & 2 \\
+8 & 10 & 0 & 6 & 5 \\
+4 & 9 & 6 & 0 & 1 \\
+7 & 2 & 5 & 1 & 0
+\end{bmatrix}
+$$
+接下来，我们使用便宜算法求解旅行商问题。
+
+\begin{enumerate}
+    \item 我们从顶点1开始，先把它加入回路T中。
+    \item 从顶点1出发，选择距离最近的顶点，即顶点2，加入回路T中。
+    \item 从顶点1、2的邻居中，选择距离最近的未访问顶点，即顶点5（$w(2,5)=2$），加入回路T中，由于对称性，加在顶点2的两侧是一样的。
+    \item 从顶点1、2、5的邻居中，选择距离最近的未访问顶点，即顶点4（$w(4,5)=1$），加入回路T中。加在顶点1、5之间，长度为 4 + 1 + 2 = 7，比加在顶点2、5之间的长度 7 + 1 + 9 = 17 更短，故选择前者。
+    \item 从顶点1、2、5、4的邻居中，选择距离最近的未访问顶点，即顶点3（$w(3,5)=5$），加入回路T中。加在顶点4、5之间，长度为 2 + 5 + 6 = 13，比加在顶点2、5之间的长度 1 + 5 + 10 = 16 更短，故选择前者。
+    \item 最后，我们回到起点顶点1，完成回路T。
+\end{enumerate}
+最终的回路T为：1 → 2 → 5 → 3 → 4 → 1，回路的总长度为 $3 + 2 + 5 + 6 + 4 = 20$。
+T中顶点的扩展过程如下：
+\begin{itemize}
+    \item 初始回路：T = \{1\}
+    \item 加入顶点2：T = \{1, 2\}
+    \item 加入顶点5：T = \{1, 2, 5\}
+    \item 加入顶点4：T = \{1, 2, 5, 4\}
+    \item 加入顶点3：T = \{1, 2, 5, 4, 3\}
+\end{itemize}
+
+\section*{题目2}
+\begin{problembox}
+    用Dijkstra算法求解图2.50中从顶点1出发到其他各顶点的最短路径，并写出T中顶点被删除的次序。
+\end{problembox}
+\textbf{解：} 我们从顶点1开始，定义到顶点1的距离为$\pi(1) = 0$，其他顶点的距离为$\pi(v) = \infty$。初始状态下，$T = \{2, 3, 4, 5, 6, 7, 8\}$。
+\begin{enumerate}
+    \item 从顶点1出发，更新邻居顶点的距离：$\pi(2) = 4$，$\pi(3) = 3$。选择T中距离最小的顶点3删除。
+    \item 从顶点3出发，更新邻居顶点的距离：$\pi(5) = 9$，$\pi(4) = 6$，$\pi(2) = \min(4, 3 + 2) = 4$。选择T中距离最小的顶点2删除。
+    \item 从顶点2出发，更新邻居顶点的距离：$\pi(4) = \min(6, 4 + 5) = 6$。选择T中距离最小的顶点4删除。
+    \item 从顶点4出发，更新邻居顶点的距离：$\pi(5) = \min(9, 1 + 6) = 7$，$\pi(6) = 11$。选择T中距离最小的顶点5删除。
+    \item 从顶点5出发，更新邻居顶点的距离：$\pi(7) = 12$。选择T中距离最小的顶点6删除。
+    \item 从顶点6出发，更新邻居顶点的距离：$\pi(7) = \min(12, 11 + 2) = 12$，$\pi(8) = 19$。选择T中距离最小的顶点7删除。
+    \item 从顶点7出发，更新邻居顶点的距离：$\pi(8) = \min(19, 12 + 4) = 16$。选择T中距离最小的顶点8删除。
+\end{enumerate}
+最终，从顶点1出发到其他各顶点的最短路径长度为：$\pi(1) = 0$，$\pi(2) = 4$，$\pi(3) = 3$，$\pi(4) = 6$，$\pi(5) = 7$，$\pi(6) = 11$，$\pi(7) = 12$，$\pi(8) = 16$。
+
+T中顶点被删除的次序为：3 → 2 → 4 → 5 → 6 → 7 → 8。
+
+\section*{题目3}
+\begin{problembox}
+    用Ford算法求解图2.51中从顶点1出发到其他各顶点的最短路径，并写出迭代次数。
+\end{problembox}
+\textbf{解：} Ford算法的核心思想是通过迭代更新路径长度来找到最短路径。我们从顶点1出发，初始化距离为$\pi(1) = 0$，其他顶点的距离为$\pi(v) = \infty$。我们最多需要进行$|V| - 1$次迭代，其中$|V|$是图中顶点的数量。
+\begin{enumerate}
+    \item 第1次迭代：对于节点2，$\pi(2) = \min(\infty, 0 + 1) = 1$；对于节点3，$\pi(3) = \min(\infty, 0 + 8) = 8$；对于节点4，$\pi(4) = \min(\infty, 2 + 1, 4 + 8) = 3$；对于节点5，$\pi(5) = \min(\infty, 1 + 8, 3 + 5) = 8$。
+    \item 第2次迭代：对于节点2，没有更新；对于节点3，$\pi(3) = \min(8, 3 + 4) = 7$；对于节点4，没有更新；对于节点5，没有更新。
+    \item 第3次迭代：对于节点2，没有更新；对于节点3，没有更新；对于节点4，没有更新；对于节点5，没有更新。迭代结束。
+\end{enumerate}
+最终，从顶点1出发到其他各顶点的最短路径长度为：$\pi(1) = 0$，$\pi(2) = 1$，$\pi(3) = 7$，$\pi(4) = 3$，$\pi(5) = 8$。
+迭代次数为3次。
+
+\section*{题目4}
+\begin{problembox}
+扩展计算最短路径使用的Dijkstra算法，使其能够求出两点之间具体的最短路径。
+\end{problembox}
+
+\begin{algorithm}
+\caption{Dijkstra算法（$O(n^2)$，带路径恢复）}
+\begin{algorithmic}[1]
+\REQUIRE 图 $G=(V,E)$，权重 $w(u,v)\ge 0$，源点 $s$
+\ENSURE 各点最短距离 $d[v]$ 及对应路径
+
+\FOR{每个顶点 $v \in V$}
+    \STATE $d[v] \leftarrow \infty$
+    \STATE $pred[v] \leftarrow \text{NIL}$ \COMMENT{记录前驱}
+    \STATE $vis[v] \leftarrow \text{false}$ \COMMENT{是否已确定最短路}
+\ENDFOR
+\STATE $d[s] \leftarrow 0$
+
+\FOR{$i \leftarrow 1$ \TO $|V|$}
+    \STATE 在所有 $vis[v]=false$ 的顶点中选取 $d[v]$ 最小的顶点 $u$
+    \STATE $vis[u] \leftarrow \text{true}$
+    \FOR{每个与 $u$ 相邻的顶点 $v$}
+        \IF{$vis[v]=false$ 且 $d[v] > d[u] + w(u,v)$}
+            \STATE $d[v] \leftarrow d[u] + w(u,v)$
+            \STATE $pred[v] \leftarrow u$
+        \ENDIF
+    \ENDFOR
+\ENDFOR
+
+\STATE \textbf{过程} 输出路径$(s, v)$
+\IF{$v = s$}
+    \STATE 输出 $s$
+\ELSIF{$pred[v] = \text{NIL}$}
+    \STATE 输出 ``无路径''
+\ELSE
+    \STATE 输出路径$(s, pred[v])$
+    \STATE 输出 $v$
+\ENDIF
+
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}

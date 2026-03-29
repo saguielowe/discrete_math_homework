@@ -4,3 +4,17 @@
 *.fdb_latexmk
 *.synctex.gz
 *.out
+.vs
+*.x64/
+.Debug/
+*.tlog
+*.idb
+*.pdb
+*.vcxproj.user
+*.vcxproj.filters
+*.sln
+*.recipe
+*.ilk
+*.exe
+*.vcxproj
+*.obj
