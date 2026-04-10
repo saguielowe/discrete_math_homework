@@ -1,0 +1,209 @@
+\documentclass[utf8]{ctexart}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{booktabs}
+\usepackage{array}
+
+\geometry{margin=2cm}
+
+\definecolor{critical}{RGB}{200,40,40}
+\definecolor{nodeblue}{RGB}{52,120,200}
+\definecolor{nodegray}{RGB}{215,228,242}
+\definecolor{critnodebg}{RGB}{255,218,218}
+
+\usetikzlibrary{graphs, positioning, arrows.meta}
+
+\geometry{a4paper, margin=2.5cm}
+
+% 定理环境
+\newtheoremstyle{mystyle}
+  {8pt}{8pt}{\kaishu}{0pt}{\bfseries}{}{1em}{}
+\theoremstyle{mystyle}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+
+% 好看的题目框
+\newmdenv[
+  linecolor=black!40,
+  linewidth=1pt,
+  backgroundcolor=gray!8,
+  roundcorner=5pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+]{problembox}
+
+\title{\textbf{离散数学2\quad 作业6}}
+\date{\today}
+\author{李子嘉 2024012325}
+\begin{document}
+\maketitle
+
+\section*{题目1}
+
+\begin{problembox}
+一项工程，其各工序所需时间与约束关系如下表所示，用PT和PERT图求其关键路径，并求工序3，5，10的允许延误时间。
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+工序号 & 所需时间 & 前序工序 \\
+\hline
+1 & 5 & - \\
+2 & 8 & 1, 3 \\
+3 & 3 & 1 \\
+4 & 6 & 3 \\
+5 & 10 & 2, 3 \\
+6 & 4 & 2, 3 \\
+7 & 8 & 3 \\
+8 & 2 & 6, 7 \\
+9 & 4 & 5, 8 \\
+10 & 5 & 6, 7 \\
+\hline
+\end{tabular}
+\end{center}
+\end{problembox}
+\textbf{解：} 首先，我们根据工序的前序关系构建PT图和PERT图。然后，我们使用正向递推计算每个工序的最早开始时间（ES）和最早完成时间（EF），再使用逆向递推计算每个工序的最迟开始时间（LS）和最迟完成时间（LF）。最后，我们通过比较ES和LS来确定关键路径，并计算指定工序的允许延误时间（总时差）。
+所有步骤都依赖于拓扑序列，我们求出的一种拓扑序（不唯一）为：1 → 3 → 2 → 4 → 7 → 5 → 6 → 8 → 10 → 9。
+\subsection*{一、正向递推（最早时间）}
+ 
+\noindent
+规则：$\mathrm{ES}_j = \max_{i \in \mathrm{pred}(j)} \mathrm{EF}_i$，
+$\quad\mathrm{EF}_j = \mathrm{ES}_j + t_j$，起始工序取 $\mathrm{ES}=0$。
+按拓扑序计算：
+ 
+\begin{align*}
+\text{工序~1（无前序）：}   &\quad \mathrm{ES}_1 = 0,                                                          &\mathrm{EF}_1 &= 0+5 = 5  \\
+\text{工序~3（前序：1）：}   &\quad \mathrm{ES}_3 = \mathrm{EF}_1 = 5,                                         &\mathrm{EF}_3 &= 5+3 = 8  \\
+\text{工序~2（前序：1,3）：} &\quad \mathrm{ES}_2 = \max(\mathrm{EF}_1,\mathrm{EF}_3)=\max(5,8)=8,             &\mathrm{EF}_2 &= 8+8 = 16 \\
+\text{工序~4（前序：3）：}   &\quad \mathrm{ES}_4 = \mathrm{EF}_3 = 8,                                         &\mathrm{EF}_4 &= 8+6 = 14 \\
+\text{工序~7（前序：3）：}   &\quad \mathrm{ES}_7 = \mathrm{EF}_3 = 8,                                         &\mathrm{EF}_7 &= 8+8 = 16 \\
+\text{工序~5（前序：2,3）：} &\quad \mathrm{ES}_5 = \max(\mathrm{EF}_2,\mathrm{EF}_3)=\max(16,8)=16,           &\mathrm{EF}_5 &= 16+10=26 \\
+\text{工序~6（前序：2,3）：} &\quad \mathrm{ES}_6 = \max(\mathrm{EF}_2,\mathrm{EF}_3)=\max(16,8)=16,           &\mathrm{EF}_6 &= 16+4 =20 \\
+\text{工序~8（前序：6,7）：} &\quad \mathrm{ES}_8 = \max(\mathrm{EF}_6,\mathrm{EF}_7)=\max(20,16)=20,          &\mathrm{EF}_8 &= 20+2 =22 \\
+\text{工序~10（前序：6,7）：}&\quad \mathrm{ES}_{10}=\max(\mathrm{EF}_6,\mathrm{EF}_7)=\max(20,16)=20,         &\mathrm{EF}_{10}&=20+5=25 \\
+\text{工序~9（前序：5,8）：} &\quad \mathrm{ES}_9 = \max(\mathrm{EF}_5,\mathrm{EF}_8)=\max(26,22)=26,          &\mathrm{EF}_9 &= 26+4 =30
+\end{align*}
+ 
+\noindent
+故\textbf{工期} $T = \mathrm{EF}_9 = \mathbf{30}$。
+ 
+%=============================================================
+\subsection*{二、逆向递推（最迟时间）}
+%=============================================================
+ 
+\noindent
+规则：$\mathrm{LF}_j = \min_{k \in \mathrm{succ}(j)} \mathrm{LS}_k$，
+$\quad\mathrm{LS}_j = \mathrm{LF}_j - t_j$，终止工序取 $\mathrm{LF}=T=30$。
+按逆拓扑序计算：
+ 
+\begin{align*}
+\text{工序~9（终止）：}      &\quad \mathrm{LF}_9=30,                                                                     &\mathrm{LS}_9   &=30-4 =26 \\
+\text{工序~5（后继：9）：}   &\quad \mathrm{LF}_5=\mathrm{LS}_9=26,                                                       &\mathrm{LS}_5   &=26-10=16 \\
+\text{工序~8（后继：9）：}   &\quad \mathrm{LF}_8=\mathrm{LS}_9=26,                                                       &\mathrm{LS}_8   &=26-2 =24 \\
+\text{工序~10（后继：9）：}  &\quad \mathrm{LF}_{10}=\mathrm{LS}_9=30,                                                    &\mathrm{LS}_{10}&=30-5 =25 \\
+\text{工序~6（后继：8,10）：}&\quad \mathrm{LF}_6=\min(\mathrm{LS}_8,\mathrm{LS}_{10})=\min(24,25)=24,                    &\mathrm{LS}_6   &=24-4 =20 \\
+\text{工序~7（后继：8,10）：}&\quad \mathrm{LF}_7=\min(\mathrm{LS}_8,\mathrm{LS}_{10})=\min(24,25)=24,                    &\mathrm{LS}_7   &=24-8 =16 \\
+\text{工序~2（后继：5,6）：} &\quad \mathrm{LF}_2=\min(\mathrm{LS}_5,\mathrm{LS}_6)=\min(16,20)=16,                       &\mathrm{LS}_2   &=16-8 =8  \\
+\text{工序~4（后继：无，取 $T$）：}&\quad \mathrm{LF}_4=30,                                                               &\mathrm{LS}_4   &=30-6 =24 \\
+\text{工序~3（后继：2,4,5,6,7）：}&\quad \mathrm{LF}_3=\min(8,24,16,20,16)=8,                                             &\mathrm{LS}_3   &=8-3  =5  \\
+\text{工序~1（后继：2,3）：} &\quad \mathrm{LF}_1=\min(\mathrm{LS}_2,\mathrm{LS}_3)=\min(8,5)=5,                          &\mathrm{LS}_1   &=5-5  =0
+\end{align*}
+ 
+%=============================================================
+\subsection*{三、汇总表与关键路径}
+%=============================================================
+ 
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{cccrrrrrc}
+\toprule
+工序 $j$ & $t_j$ & 前序 & ES & EF & LS & LF & $\mathrm{TF}$ & 关键？\\
+\midrule
+1  & 5  & ---     &  0 &  5 &  0 &  5 & \textcolor{critical}{\textbf{0}}  & \textcolor{critical}{\textbf{是}} \\
+2  & 8  & 1, 3    &  8 & 16 &  8 & 16 & \textcolor{critical}{\textbf{0}}  & \textcolor{critical}{\textbf{是}} \\
+3  & 3  & 1       &  5 &  8 &  5 &  8 & \textcolor{critical}{\textbf{0}}  & \textcolor{critical}{\textbf{是}} \\
+4  & 6  & 3       &  8 & 14 & 24 & 30 & 16 & 否 \\
+5  & 10 & 2, 3    & 16 & 26 & 16 & 26 & \textcolor{critical}{\textbf{0}}  & \textcolor{critical}{\textbf{是}} \\
+6  & 4  & 2, 3    & 16 & 20 & 20 & 24 &  4 & 否 \\
+7  & 8  & 3       &  8 & 16 & 16 & 24 &  8 & 否 \\
+8  & 2  & 6, 7    & 20 & 22 & 24 & 26 &  4 & 否 \\
+9  & 4  & 5, 8    & 26 & 30 & 26 & 30 & \textcolor{critical}{\textbf{0}}  & \textcolor{critical}{\textbf{是}} \\
+10 & 5  & 6, 7    & 20 & 25 & 25 & 30 &  5 & 否 \\
+\bottomrule
+\end{tabular}
+\end{center}
+ 
+\medskip
+\noindent\textbf{关键路径：}
+$1 \xrightarrow{5} 3 \xrightarrow{3} 2 \xrightarrow{8} 5 \xrightarrow{10} 9$，
+\quad\textbf{工期 $T=30$}
+ 
+\medskip
+\noindent\textbf{指定工序允许延误时间（总时差）：}
+\[
+  \mathrm{TF}_3 = 0\ (\text{关键，不可延误}),\qquad
+  \mathrm{TF}_5 = 0\ (\text{关键，不可延误}),\qquad
+  \mathrm{TF}_{10} = 5
+\]
+ 
+\subsection*{四、PT 图}
+荧光笔标记为关键工序，节点圈内数字表示工序号，边权表示工序持续时间。我们引入了一个虚节点finish作为所有终止工序的后继。
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{1-1.jpg}
+\end{center}
+ 
+
+\subsection*{五、PERT 图}
+荧光笔标记为关键工序，黑色边权表示工序序号，蓝色边权表示工序持续时间。
+
+值得注意的是，对于第二道工序依赖1和3，但3依赖1，因此在PERT图中，工序2直接依赖工序3即可，避免了采用虚节点将工序1的终点与工序3的终点对齐后再连接工序2的麻烦。
+类似的工序5和6也直接依赖工序3即可。
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{1-2.jpg}
+\end{center}
+
+\newpage
+\section*{题目2}
+\begin{problembox}
+分别求图2.53(a) 和 图2.53(b) 的中国邮路。
+\begin{center}
+\includegraphics[width=0.4\textwidth]{2.png}
+\end{center}
+\end{problembox}
+\textbf{解：} 我们采用奇偶图作业法来求解中国邮路问题。
+
+\textcolor{critical}{\textbf{总结作业中的经验，反复检查每条边的重复边权值和是否超过回路总权值的一半很容易出错，你需要遍历所有可能的回路，更好的方法
+是直接观察连接奇数度数顶点之间的边，找出边权最小的边进行重复以消除奇数度数点。如下面的错误示范，1-5这一条边权值为8，非常大，
+容易预感此非最优解。但是在检查过程中漏掉了1-2-4-5这个回路，导致错误地重复了1-5这条边。这大概是因为，
+我们按顺序检查1-5和3-4，首次检查1-5时，1-2-4-5回路中的2-4边并未重复，因此没达到回路总权值的一半。
+然而检查3-4时我们选择了重复2-4和3-4。我们并未回过头复查这一决定是否影响先前的最优，导致了错误的重复1-5边，实际上1-2，4-5可以代替1-5，2-4边来消除奇数度数点，
+他们的边权值分别为5和4，小于8+2。}}
+
+\subsection*{图2.53(a)}
+首先，我们检查图中每个顶点的度数，找出所有度数为奇数的顶点。对于图2.53(a)，我们发现顶点1、3、4、5的度数为奇数。我们简单地尝试增加连接1、5，和连接3、4的两条边。
+
+随后，我们检查回路中的重复边权值和是否超过回路总权值的一半。我们发现2、3、4顶点回路中的重复边权值为5，回路总权值为9，满足条件。因此我们将重复边的不重复，不重复的边重复。
+
+最后，我们检查完毕。因此重复走过的边为1-5、2-3、2-4。最终的中国邮路为：2 → 1 → 5 → 1 → 3 → 4 → 5 → 2 → 4 → 2 → 3 → 2，回路的总长度为 $5 + 8 + 8 + 9 + 5 + 4 + 4 + 2 + 2 + 2 + 2 = 51$。
+
+\textcolor{critical}{上题解答有误，重复走过的边应为1-2、2-3、4-5。最终的中国邮路为：
+2 → 1 → 2 → 5 → 1 → 3 → 4 → 5 → 4 → 2 → 3 → 2，回路的总长度为 $5 + 5 + 4 + 8 + 9 + 5 + 4 + 4 + 2 + 2 + 2 = \mathbf{50} < 51$。}
+
+\subsection*{图2.53(b)}
+首先，我们检查图中每个顶点的度数，找出所有度数为奇数的顶点。对于图2.53(b)，我们发现顶点1、2、3、6的度数为奇数。我们简单地尝试增加连接1、6，和连接2、3的两条边。
+
+随后，我们检查回路中的重复边权值和是否超过回路总权值的一半。我们发现1、4、6顶点回路中的重复边权值为8，回路总权值为13，满足条件。因此我们将重复边的不重复，不重复的边重复。
+同理，我们发现2、3、5顶点回路中的重复边权值为9，回路总权值为12，满足条件。因此我们将重复边的不重复，不重复的边重复。
+
+最后，我们检查完毕。因此重复走过的边为1-4、4-6、2-5、3-5。最终的中国邮路为： v1 → v4 → v6 → v4 → v1 → v6 → v5 → v3 → v5 → v2 → v5 → v4 → v3 → v2 → v1，
+回路的总长度为 $ 5 + 9 + 4 + 2 + 3 + 8 + 2 + 2 + 3 + 1 + 8 = 47 $。
+
+值得一提的是，虽然我们已经确定了重复的边，也即获得了中国邮路作为欧拉回路的图，但人工求解这一复杂稠密的欧拉回路仍然具有挑战性，容易出错。
+最后笔者不得不使用Hierholzer算法来自动化推导欧拉回路，确保每条边都被正确地访问一次。这也提醒我们，中国邮路虽然在理论上已经可以比较容易地解决（确定重边之后取欧拉回路即可），但人工实际求解路径仍对细心和耐心提出了较高的要求。
+\end{document}
