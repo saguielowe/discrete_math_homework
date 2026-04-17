@@ -9,8 +9,10 @@ import numpy as np
 import sympy as sp
 
 
-VAR_NAMES = ["A", "B", "C", "D", "E"]
-ALL_NAMES = VAR_NAMES + ["ANS"]
+DEFAULT_VAR_NAMES = ["A", "B", "C", "D", "E"]
+VAR_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
+SYSTEM_NAMES = {"I"}
+LATEX_ZERO_TOL = 1e-12
 
 
 def _to_float(value: str) -> float:
@@ -105,7 +107,7 @@ def format_matrix(m: np.ndarray) -> str:
 def format_latex_matrix(m: np.ndarray, env: str = "bmatrix") -> str:
     rows: List[str] = []
     for row in m:
-        pieces = [f"{float(x):.10g}" for x in row]
+        pieces = ["0" if abs(float(x)) < LATEX_ZERO_TOL else f"{float(x):.10g}" for x in row]
         rows.append(" & ".join(pieces))
     body = r" \\ ".join(rows)
     return rf"\begin{{{env}}}{body}\end{{{env}}}"
@@ -164,9 +166,25 @@ def read_matrix_interactively() -> np.ndarray:
     return parse_latex_matrix(raw)
 
 
+def normalize_var_name(name: str) -> str:
+    key = name.strip().upper()
+    if not key:
+        raise ValueError("Variable name cannot be empty.")
+    if not VAR_NAME_PATTERN.match(key):
+        raise ValueError("Invalid variable name. Use letters/numbers/underscore, and start with a letter.")
+    return key
+
+
+def is_reserved_var(name: str) -> bool:
+    key = normalize_var_name(name)
+    return key in SYSTEM_NAMES
+
+
 def require_var(store: Dict[str, Optional[np.ndarray]], name: str) -> np.ndarray:
-    key = name.upper()
-    if key not in ALL_NAMES:
+    key = normalize_var_name(name)
+    if key in SYSTEM_NAMES:
+        raise ValueError("I is a system identity placeholder. Use it in hcat/vcat, or generate with eye.")
+    if key not in store:
         raise ValueError(f"Unknown variable '{name}'.")
     value = store.get(key)
     if value is None:
@@ -174,10 +192,154 @@ def require_var(store: Dict[str, Optional[np.ndarray]], name: str) -> np.ndarray
     return value
 
 
-def run_repl() -> None:
-    store: Dict[str, Optional[np.ndarray]] = {name: None for name in ALL_NAMES}
+def try_parse_scalar(s: str) -> tuple[bool, float]:
+    try:
+        value = float(sp.N(sp.sympify(s.strip())))
+        return True, value
+    except Exception:
+        return False, 0.0
 
-    print("Matrix Calculator (A-E + ANS)")
+
+def assign_var(
+    store: Dict[str, Optional[np.ndarray]],
+    target: str,
+    value: np.ndarray,
+    *,
+    update_ans: bool,
+    reason: str,
+) -> str:
+    key = normalize_var_name(target)
+    store[key] = value
+    if update_ans:
+        store["ANS"] = value
+        print(f"ANS updated ({reason}).")
+    elif key == "ANS":
+        print(f"ANS updated ({reason}).")
+    return key
+
+
+def parse_target(parts: List[str], arrow_index: int, store: Dict[str, Optional[np.ndarray]]) -> str:
+    if parts[arrow_index] != "->":
+        raise ValueError("Use [-> Z] for target.")
+    target = normalize_var_name(parts[arrow_index + 1])
+    if target != "ANS" and target not in store:
+        store[target] = None
+    return target
+
+
+def parse_order_with_optional_target(
+    args: List[str],
+    expected_len: int,
+    store: Dict[str, Optional[np.ndarray]],
+) -> tuple[List[int], str]:
+    target = "ANS"
+    order_args = args
+    if "->" in args:
+        arrow_pos = args.index("->")
+        if arrow_pos != len(args) - 2:
+            raise ValueError("Usage: ... <order...> [-> Z]")
+        target = parse_target(args, arrow_pos, store)
+        order_args = args[:arrow_pos]
+
+    if not order_args:
+        raise ValueError("Need at least one index.")
+
+    try:
+        order = [int(x) for x in order_args]
+    except ValueError as e:
+        raise ValueError("Order indices must be integers.") from e
+
+    if len(order) != len(set(order)):
+        raise ValueError("Order indices must not be duplicated.")
+
+    if any(i < 1 or i > expected_len for i in order):
+        raise ValueError(f"All indices must be in range 1..{expected_len}.")
+
+    return order, target
+
+
+def parse_tail_with_optional_target(
+    raw_tail: str,
+    store: Dict[str, Optional[np.ndarray]],
+) -> tuple[str, str]:
+    text = raw_tail.strip()
+    if not text:
+        raise ValueError("Missing operands.")
+    m = re.match(r"^(.*?)(?:\s*->\s*([A-Za-z][A-Za-z0-9_]*))?\s*$", text)
+    if not m:
+        raise ValueError("Invalid syntax.")
+    body = (m.group(1) or "").strip()
+    if not body:
+        raise ValueError("Missing operands.")
+    target = "ANS"
+    if m.group(2):
+        target = normalize_var_name(m.group(2))
+        if target != "ANS" and target not in store:
+            store[target] = None
+    return body, target
+
+
+def parse_concat_operands(body: str) -> List[str]:
+    text = body.strip()
+    if text.startswith("(") and text.endswith(")"):
+        text = text[1:-1].strip()
+    if not text:
+        raise ValueError("Missing operands.")
+    if "," in text:
+        tokens = [t.strip() for t in text.split(",") if t.strip()]
+    else:
+        tokens = [t.strip() for t in text.split() if t.strip()]
+    if len(tokens) < 2:
+        raise ValueError("Need at least two matrices to concatenate.")
+    return [normalize_var_name(t) for t in tokens]
+
+
+def resolve_concat_operand(
+    store: Dict[str, Optional[np.ndarray]],
+    name: str,
+    *,
+    axis: int,
+    inferred_size: Optional[int],
+) -> np.ndarray:
+    if name == "I":
+        if inferred_size is None:
+            raise ValueError("Cannot infer I size. Provide at least one non-I matrix, or use eye first.")
+        return np.eye(inferred_size, dtype=float)
+    return require_var(store, name)
+
+
+def concat_matrices(
+    store: Dict[str, Optional[np.ndarray]],
+    names: List[str],
+    *,
+    axis: int,
+) -> np.ndarray:
+    if axis not in {0, 1}:
+        raise ValueError("axis must be 0 or 1.")
+
+    inferred_size: Optional[int] = None
+    for n in names:
+        if n == "I":
+            continue
+        m = require_var(store, n)
+        inferred_size = m.shape[0] if axis == 1 else m.shape[1]
+        break
+
+    mats = [resolve_concat_operand(store, n, axis=axis, inferred_size=inferred_size) for n in names]
+    try:
+        return np.concatenate(mats, axis=axis)
+    except ValueError as e:
+        if axis == 1:
+            raise ValueError("hcat requires all matrices to have the same row count.") from e
+        raise ValueError("vcat requires all matrices to have the same column count.") from e
+
+
+def run_repl() -> None:
+    store: Dict[str, Optional[np.ndarray]] = {"ANS": None}
+    for name in DEFAULT_VAR_NAMES:
+        store[name] = None
+
+    print("Matrix Calculator (dynamic variables + ANS)")
     print("Type 'help' for commands, 'exit' to quit.")
 
     while True:
@@ -192,6 +354,16 @@ def run_repl() -> None:
 
         parts = cmd.split()
         head = parts[0].lower()
+        
+        alias_map = {
+            "tr": "t",
+            "rk": "rank",
+        }
+        head = alias_map.get(head, head)
+        
+        if head == "show" and len(parts) > 1 and parts[1].lower() == "latex":
+            head = "latex"
+            parts = ["latex", parts[2]] if len(parts) > 2 else ["latex"]
 
         try:
             if head in {"exit", "quit"}:
@@ -200,31 +372,44 @@ def run_repl() -> None:
             if head == "help":
                 print(
                     "Commands:\n"
-                    "  set <A|B|C|D|E>              # interactive input\n"
+                    "  set <VAR>                    # interactive input\n"
                     "  set <VAR> = <plain text>     # quick plain input\n"
                     "  setlatex <VAR> = <latex>     # quick latex input\n"
+                    "  set <X> as <Y>               # X <- copy of Y (Y can be ANS)\n"
                     "  show <VAR>                   # show matrix + shape\n"
+                    "  show latex <VAR>             # show matrix in LaTeX format\n"
                     "  latex <VAR>                  # show LaTeX + shape\n"
                     "  showlatex <VAR>              # alias of latex\n"
                     "  list\n"
                     "  clear <VAR>\n"
-                    "  add X Y [-> Z]\n"
-                    "  mul X Y [-> Z]\n"
-                    "  T X [-> Z]\n"
-                    "  det X [-> Z]\n"
+                    "  add X Y [-> Z]               # X+Y (Y can be matrix or scalar)\n"
+                    "  mul X Y [-> Z]               # X*Y: scalar mult if Y is number, matmul if Y is matrix\n"
+                    "  T X [-> Z]                  # or: tr X [-> Z]\n"
+                    "  det X                        # output determinant\n"
+                    "  inv X [-> Z]\n"
+                    "  rank X                       # or: rk X; output matrix rank\n"
+                    "  eye n [-> Z]                 # n x n identity matrix\n"
+                    "  zeros m n [-> Z]             # m x n zero matrix\n"
+                    "  ones m n [-> Z]              # m x n all-ones matrix\n"
+                    "  hcat (A, I, B) [-> Z]        # horizontal concat, supports I auto-size\n"
+                    "  vcat (A, I, B) [-> Z]        # vertical concat, supports I auto-size\n"
                     "  delrow X i [-> Z]            # delete row i (1-based)\n"
                     "  delcol X j [-> Z]            # delete col j (1-based)\n"
-                    "  Variables: A B C D E ANS"
+                    "  permrow X i1 i2 ... [-> Z]   # row subset/reorder by 1-based indices\n"
+                    "  permcol X j1 j2 ... [-> Z]   # col subset/reorder by 1-based indices\n"
+                    "  Variables: custom names (ANS is result variable, I is system identity placeholder)"
                 )
                 continue
 
             if head == "list":
-                for name in ALL_NAMES:
+                names = ["ANS"] + sorted([n for n in store.keys() if n != "ANS"])
+                for name in names:
                     m = store[name]
                     if m is None:
                         print(f"{name}: <empty>")
                     else:
                         print(f"{name}: shape={m.shape}")
+                print("I: <system identity placeholder>")
                 continue
 
             if head == "show":
@@ -244,43 +429,69 @@ def run_repl() -> None:
             if head == "clear":
                 if len(parts) != 2:
                     raise ValueError("Usage: clear <VAR>")
-                key = parts[1].upper()
-                if key not in ALL_NAMES:
+                key = normalize_var_name(parts[1])
+                if key in SYSTEM_NAMES:
+                    raise ValueError("Cannot clear system variable I.")
+                if key not in store:
                     raise ValueError("Unknown variable.")
                 store[key] = None
                 print(f"{key} cleared.")
                 continue
 
             if head == "set":
+                if len(parts) == 4 and parts[2].lower() == "as":
+                    target = normalize_var_name(parts[1])
+                    if target in SYSTEM_NAMES:
+                        raise ValueError("Cannot assign to system variable I.")
+                    source = require_var(store, parts[3])
+                    if target != "ANS" and target not in store:
+                        store[target] = None
+                    copied = np.array(source, copy=True)
+                    target = assign_var(
+                        store,
+                        target,
+                        copied,
+                        update_ans=False,
+                        reason=f"set {target} as {parts[3].upper()}",
+                    )
+                    print_named_matrix(target, copied)
+                    continue
+
                 if len(parts) >= 4 and parts[2] == "=":
-                    key = parts[1].upper()
-                    if key not in VAR_NAMES:
-                        raise ValueError("set only supports A-E.")
+                    key = normalize_var_name(parts[1])
+                    if key in SYSTEM_NAMES:
+                        raise ValueError("Cannot assign to system variable I.")
+                    if key != "ANS" and key not in store:
+                        store[key] = None
                     rhs = cmd.split("=", 1)[1]
                     m = parse_plain_matrix(rhs)
-                    store[key] = m
+                    key = assign_var(store, key, m, update_ans=False, reason=f"set {key}")
                     print_named_matrix(key, m)
                     continue
 
                 if len(parts) != 2:
-                    raise ValueError("Usage: set <A|B|C|D|E>")
-                key = parts[1].upper()
-                if key not in VAR_NAMES:
-                    raise ValueError("set only supports A-E.")
+                    raise ValueError("Usage: set <VAR>")
+                key = normalize_var_name(parts[1])
+                if key in SYSTEM_NAMES:
+                    raise ValueError("Cannot assign to system variable I.")
+                if key != "ANS" and key not in store:
+                    store[key] = None
                 m = read_matrix_interactively()
-                store[key] = m
+                key = assign_var(store, key, m, update_ans=False, reason=f"set {key}")
                 print_named_matrix(key, m)
                 continue
 
             if head == "setlatex":
                 if len(parts) < 4 or parts[2] != "=":
-                    raise ValueError("Usage: setlatex <A|B|C|D|E> = <latex>")
-                key = parts[1].upper()
-                if key not in VAR_NAMES:
-                    raise ValueError("setlatex only supports A-E.")
+                    raise ValueError("Usage: setlatex <VAR> = <latex>")
+                key = normalize_var_name(parts[1])
+                if key in SYSTEM_NAMES:
+                    raise ValueError("Cannot assign to system variable I.")
+                if key != "ANS" and key not in store:
+                    store[key] = None
                 rhs = cmd.split("=", 1)[1]
                 m = parse_latex_matrix(rhs)
-                store[key] = m
+                key = assign_var(store, key, m, update_ans=False, reason=f"setlatex {key}")
                 print_named_matrix(key, m)
                 continue
 
@@ -288,17 +499,23 @@ def run_repl() -> None:
                 if len(parts) not in {3, 5}:
                     raise ValueError(f"Usage: {head} X Y [-> Z]")
                 x = require_var(store, parts[1])
-                y = require_var(store, parts[2])
+                
+                is_scalar, scalar_val = try_parse_scalar(parts[2])
+                if is_scalar:
+                    y = scalar_val
+                else:
+                    y = require_var(store, parts[2])
+                
                 target = "ANS"
                 if len(parts) == 5:
-                    if parts[3] != "->":
-                        raise ValueError("Use [-> Z] for target.")
-                    target = parts[4].upper()
-                    if target not in ALL_NAMES:
-                        raise ValueError("Unknown target variable.")
-                result = x + y if head == "add" else x @ y
-                store["ANS"] = result
-                store[target] = result
+                    target = parse_target(parts, 3, store)
+                
+                if head == "add":
+                    result = x + y
+                else:
+                    result = x * y if is_scalar else x @ y
+                
+                target = assign_var(store, target, result, update_ans=True, reason=head)
                 print_named_matrix(target, result)
                 continue
 
@@ -308,36 +525,95 @@ def run_repl() -> None:
                 x = require_var(store, parts[1])
                 target = "ANS"
                 if len(parts) == 4:
-                    if parts[2] != "->":
-                        raise ValueError("Use [-> Z] for target.")
-                    target = parts[3].upper()
-                    if target not in ALL_NAMES:
-                        raise ValueError("Unknown target variable.")
+                    target = parse_target(parts, 2, store)
                 result = x.T
-                store["ANS"] = result
-                store[target] = result
+                target = assign_var(store, target, result, update_ans=True, reason="transpose")
                 print_named_matrix(target, result)
                 continue
 
             if head == "det":
-                if len(parts) not in {2, 4}:
-                    raise ValueError("Usage: det X [-> Z]")
+                if len(parts) != 2:
+                    raise ValueError("Usage: det X")
                 x = require_var(store, parts[1])
                 if x.shape[0] != x.shape[1]:
                     raise ValueError("det requires a square matrix.")
+                value = float(np.linalg.det(x))
+                print(f"{value:.10g}")
+                continue
+
+            if head == "inv":
+                if len(parts) not in {2, 4}:
+                    raise ValueError("Usage: inv X [-> Z]")
+                x = require_var(store, parts[1])
+                if x.shape[0] != x.shape[1]:
+                    raise ValueError("inv requires a square matrix.")
                 target = "ANS"
                 if len(parts) == 4:
-                    if parts[2] != "->":
-                        raise ValueError("Use [-> Z] for target.")
-                    target = parts[3].upper()
-                    if target not in ALL_NAMES:
-                        raise ValueError("Unknown target variable.")
-                value = float(np.linalg.det(x))
-                result = np.array([[value]], dtype=float)
-                store["ANS"] = result
-                store[target] = result
-                print(f"{target}: shape={result.shape}")
-                print(f"{target} = {value:.10g}")
+                    target = parse_target(parts, 2, store)
+                try:
+                    result = np.linalg.inv(x)
+                except np.linalg.LinAlgError as e:
+                    raise ValueError("Matrix is singular and cannot be inverted.") from e
+                target = assign_var(store, target, result, update_ans=True, reason="inv")
+                print_named_matrix(target, result)
+                continue
+
+            if head == "rank":
+                if len(parts) != 2:
+                    raise ValueError("Usage: rank X")
+                x = require_var(store, parts[1])
+                value = float(np.linalg.matrix_rank(x))
+                print(f"{value:.10g}")
+                continue
+
+            if head == "eye":
+                if len(parts) not in {2, 4}:
+                    raise ValueError("Usage: eye n [-> Z]")
+                n = int(parts[1])
+                if n <= 0:
+                    raise ValueError("n must be positive.")
+                target = "ANS"
+                if len(parts) == 4:
+                    target = parse_target(parts, 2, store)
+                if target in SYSTEM_NAMES:
+                    raise ValueError("Cannot assign to system variable I.")
+                result = np.eye(n, dtype=float)
+                target = assign_var(store, target, result, update_ans=True, reason="eye")
+                print_named_matrix(target, result)
+                continue
+
+            if head == "zeros":
+                if len(parts) not in {3, 5}:
+                    raise ValueError("Usage: zeros m n [-> Z]")
+                m = int(parts[1])
+                n = int(parts[2])
+                if m <= 0 or n <= 0:
+                    raise ValueError("m and n must be positive.")
+                target = "ANS"
+                if len(parts) == 5:
+                    target = parse_target(parts, 3, store)
+                if target in SYSTEM_NAMES:
+                    raise ValueError("Cannot assign to system variable I.")
+                result = np.zeros((m, n), dtype=float)
+                target = assign_var(store, target, result, update_ans=True, reason="zeros")
+                print_named_matrix(target, result)
+                continue
+
+            if head == "ones":
+                if len(parts) not in {3, 5}:
+                    raise ValueError("Usage: ones m n [-> Z]")
+                m = int(parts[1])
+                n = int(parts[2])
+                if m <= 0 or n <= 0:
+                    raise ValueError("m and n must be positive.")
+                target = "ANS"
+                if len(parts) == 5:
+                    target = parse_target(parts, 3, store)
+                if target in SYSTEM_NAMES:
+                    raise ValueError("Cannot assign to system variable I.")
+                result = np.ones((m, n), dtype=float)
+                target = assign_var(store, target, result, update_ans=True, reason="ones")
+                print_named_matrix(target, result)
                 continue
 
             if head in {"delrow", "delcol"}:
@@ -349,11 +625,7 @@ def run_repl() -> None:
                 idx = int(parts[2])
                 target = "ANS"
                 if len(parts) == 5:
-                    if parts[3] != "->":
-                        raise ValueError("Use [-> Z] for target.")
-                    target = parts[4].upper()
-                    if target not in ALL_NAMES:
-                        raise ValueError("Unknown target variable.")
+                    target = parse_target(parts, 3, store)
 
                 if head == "delrow":
                     if x.shape[0] <= 1:
@@ -372,10 +644,41 @@ def run_repl() -> None:
                         )
                     result = np.delete(x, idx - 1, axis=1)
 
-                store["ANS"] = result
-                store[target] = result
+                target = assign_var(store, target, result, update_ans=True, reason=head)
                 if len(parts) == 3:
                     print("Note: default target is ANS. Use [-> Z] to overwrite a variable.")
+                print_named_matrix(target, result)
+                continue
+
+            if head in {"hcat", "vcat"}:
+                raw_tail = cmd[len(parts[0]):].strip()
+                body, target = parse_tail_with_optional_target(raw_tail, store)
+                if target in SYSTEM_NAMES:
+                    raise ValueError("Cannot assign to system variable I.")
+                names = parse_concat_operands(body)
+                axis = 1 if head == "hcat" else 0
+                result = concat_matrices(store, names, axis=axis)
+                target = assign_var(store, target, result, update_ans=True, reason=head)
+                print_named_matrix(target, result)
+                continue
+
+            if head in {"permrow", "permcol"}:
+                if len(parts) < 4:
+                    if head == "permrow":
+                        raise ValueError("Usage: permrow X i1 i2 ... [-> Z]")
+                    raise ValueError("Usage: permcol X j1 j2 ... [-> Z]")
+
+                x = require_var(store, parts[1])
+                expected_len = x.shape[0] if head == "permrow" else x.shape[1]
+                order, target = parse_order_with_optional_target(parts[2:], expected_len, store)
+                zero_based = [i - 1 for i in order]
+
+                if head == "permrow":
+                    result = x[zero_based, :]
+                else:
+                    result = x[:, zero_based]
+
+                target = assign_var(store, target, result, update_ans=True, reason=head)
                 print_named_matrix(target, result)
                 continue
 
