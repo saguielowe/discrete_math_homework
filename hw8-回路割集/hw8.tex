@@ -84,7 +84,7 @@ S_f = \begin{bmatrix}-1 & -1 & 0 & -1 & 1 & 0 & 0 & 0 \\ 1 & 0 & 1 & 0 & 0 & 1 &
 \newpage
 \section*{题目2}
 \begin{problembox}
-10个树叶的权值分别为 $20、7、88、100、6、13、18、30、7、16$，求其构造的哈夫曼树的带权路径总长。
+10个树叶的权值分别为 $20, 7, 88, 100, 6, 13, 18, 30, 7, 16$，求其构造的哈夫曼树的带权路径总长。
 \end{problembox}
 \textbf{解：} 我们按照哈夫曼树的构造方法，首先将所有权值放入一个优先队列中，每次取出权值最小的两个节点合并成一个新节点，并将新节点的权值重新加入队列，直到队列中只剩下一个节点为止。每次合并时，我们记录下新节点的权值，并在最后计算带权路径总长。
 具体步骤如下：
@@ -127,7 +127,8 @@ $WPL = 13 + 20 + 29 + 38 + 49 + 68 + 117 + 188 + 305 = 827$。
   \node (v4) at (0,0) {$v4$};
 
   \draw (v1) -- (v2) node[midway, above, w] {20};
-  \draw (v1) to[bend left=12] (v3) node[midway, left, w] {23};
+  \draw (v1) to[bend right=12] (v3);
+  \node[w] at (-2.85,1.48) {23};
   \draw (v1) -- (v4) node[midway, above left, w] {1};
   \draw (v2) -- (v4) node[midway, above right, w] {4};
   \draw (v2) -- (v5) node[midway, above, w] {15};
@@ -190,25 +191,18 @@ Kruskal 的思想是：先把所有边按权值从小到大排序，然后依次
 
 将边按权值升序排列为：
 \[
- (v1,v4):1,
- (v5,v6):3,
- (v2,v4):4,
- (v4,v7):8,
- (v4,v5):9,
- (v2,v5):15,
- (v4,v6):16,
- (v6,v7):17,
- (v1,v2):20,
- (v1,v3):23,
- (v3,v7):28,
- (v3,v4):36.
+\begin{aligned}
+&(v1,v4):1,\ (v5,v6):3,\ (v2,v4):4,\ (v4,v7):8,\\
+&(v4,v5):9,\ (v2,v5):15,\ (v4,v6):16,\ (v6,v7):17,\\
+&(v1,v2):20,\ (v1,v3):23,\ (v3,v7):28,\ (v3,v4):36.
+\end{aligned}
 \]
 下面逐条处理：
 \begin{enumerate}
   \item 选 $(v1,v4)$，当前分量：$\{v1,v4\},\{v2\},\{v3\},\{v5\},\{v6\},\{v7\}$。
   \item 选 $(v5,v6)$，当前分量：$\{v1,v4\},\{v2\},\{v3\},\{v5,v6\},\{v7\}$。
   \item 选 $(v2,v4)$，合并后分量：$\{v1,v2,v4\},\{v3\},\{v5,v6\},\{v7\}$。
-  \item 选 $(v4,v7)$，合并后分量：$\{v1,v2,v4,v7\},\{v3\},\{v5,v6\}$。
+  \item 选 $(v4,v7)$，合并 后分量：$\{v1,v2,v4,v7\},\{v3\},\{v5,v6\}$。
   \item 选 $(v4,v5)$，合并后分量：$\{v1,v2,v4,v5,v6,v7\},\{v3\}$。
   \item 考察 $(v2,v5)$：两端已在同一分量中，加入会成环，舍弃。
   \item 考察 $(v4,v6)$：两端已在同一分量中，舍弃。
@@ -248,7 +242,8 @@ T=\{(v1,v4),(v5,v6),(v2,v4),(v4,v7),(v4,v5),(v1,v3)\},
   \draw[mst] (v4) -- (v7) node[midway, below left, w] {8};
   \draw[mst] (v4) -- (v5) node[midway, above right, w] {9};
   \draw[mst] (v5) -- (v6) node[midway, right, w] {3};
-  \draw[mst] (v1) to[bend left=12] (v3) node[midway, left, w] {23};
+  \draw[mst] (v1) to[bend right=12] (v3);
+  \node[w] at (-2.85,1.48) {23};
 \end{tikzpicture}
 \caption{题目3最小生成树（MST）}
 \end{figure}
