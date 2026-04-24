@@ -258,6 +258,19 @@ def parse_order_with_optional_target(
     return order, target
 
 
+def parse_full_permutation_with_optional_target(
+    args: List[str],
+    expected_len: int,
+    store: Dict[str, Optional[np.ndarray]],
+) -> tuple[List[int], str]:
+    order, target = parse_order_with_optional_target(args, expected_len, store)
+    if len(order) != expected_len:
+        raise ValueError(f"Must provide a full permutation with exactly {expected_len} indices.")
+    if sorted(order) != list(range(1, expected_len + 1)):
+        raise ValueError(f"Permutation must contain every index in 1..{expected_len} exactly once.")
+    return order, target
+
+
 def parse_tail_with_optional_target(
     raw_tail: str,
     store: Dict[str, Optional[np.ndarray]],
@@ -358,6 +371,8 @@ def run_repl() -> None:
         alias_map = {
             "tr": "t",
             "rk": "rank",
+            "ipc": "invpermcol",
+            "ipr": "invpermrow",
         }
         head = alias_map.get(head, head)
         
@@ -372,31 +387,34 @@ def run_repl() -> None:
             if head == "help":
                 print(
                     "Commands:\n"
+                    "  (If matrix object X is omitted, ANS is used by default.)\n"
                     "  set <VAR>                    # interactive input\n"
                     "  set <VAR> = <plain text>     # quick plain input\n"
                     "  setlatex <VAR> = <latex>     # quick latex input\n"
                     "  set <X> as <Y>               # X <- copy of Y (Y can be ANS)\n"
-                    "  show <VAR>                   # show matrix + shape\n"
-                    "  show latex <VAR>             # show matrix in LaTeX format\n"
-                    "  latex <VAR>                  # show LaTeX + shape\n"
-                    "  showlatex <VAR>              # alias of latex\n"
+                    "  show [VAR]                   # show matrix + shape\n"
+                    "  show latex [VAR]             # show matrix in LaTeX format\n"
+                    "  latex [VAR]                  # show LaTeX + shape\n"
+                    "  showlatex [VAR]              # alias of latex\n"
                     "  list\n"
                     "  clear <VAR>\n"
-                    "  add X Y [-> Z]               # X+Y (Y can be matrix or scalar)\n"
-                    "  mul X Y [-> Z]               # X*Y: scalar mult if Y is number, matmul if Y is matrix\n"
-                    "  T X [-> Z]                  # or: tr X [-> Z]\n"
-                    "  det X                        # output determinant\n"
-                    "  inv X [-> Z]\n"
-                    "  rank X                       # or: rk X; output matrix rank\n"
+                    "  add [X] Y [-> Z]             # X+Y (Y can be matrix or scalar)\n"
+                    "  mul [X] Y [-> Z]             # X*Y: scalar mult if Y is number, matmul if Y is matrix\n"
+                    "  T [X] [-> Z]                 # or: tr [X] [-> Z]\n"
+                    "  det [X]                      # output determinant\n"
+                    "  inv [X] [-> Z]\n"
+                    "  rank [X]                     # or: rk [X]; output matrix rank\n"
                     "  eye n [-> Z]                 # n x n identity matrix\n"
                     "  zeros m n [-> Z]             # m x n zero matrix\n"
                     "  ones m n [-> Z]              # m x n all-ones matrix\n"
                     "  hcat (A, I, B) [-> Z]        # horizontal concat, supports I auto-size\n"
                     "  vcat (A, I, B) [-> Z]        # vertical concat, supports I auto-size\n"
-                    "  delrow X i [-> Z]            # delete row i (1-based)\n"
-                    "  delcol X j [-> Z]            # delete col j (1-based)\n"
-                    "  permrow X i1 i2 ... [-> Z]   # row subset/reorder by 1-based indices\n"
-                    "  permcol X j1 j2 ... [-> Z]   # col subset/reorder by 1-based indices\n"
+                    "  delrow [X] i [-> Z]          # delete row i (1-based)\n"
+                    "  delcol [X] j [-> Z]          # delete col j (1-based)\n"
+                    "  permrow [X] i1 i2 ... [-> Z] # row subset/reorder by 1-based indices\n"
+                    "  permcol [X] j1 j2 ... [-> Z] # col subset/reorder by 1-based indices\n"
+                    "  invpermcol [X] p1 ... pn [-> Z]# inverse full col permutation (alias: ipc)\n"
+                    "  invpermrow [X] p1 ... pn [-> Z]# inverse full row permutation (alias: ipr)\n"
                     "  Variables: custom names (ANS is result variable, I is system identity placeholder)"
                 )
                 continue
@@ -413,17 +431,19 @@ def run_repl() -> None:
                 continue
 
             if head == "show":
-                if len(parts) != 2:
-                    raise ValueError("Usage: show <VAR> (or: showlatex <VAR>)")
-                m = require_var(store, parts[1])
-                print_named_matrix(parts[1].upper(), m)
+                if len(parts) not in {1, 2}:
+                    raise ValueError("Usage: show [VAR] (or: showlatex [VAR])")
+                name = "ANS" if len(parts) == 1 else parts[1]
+                m = require_var(store, name)
+                print_named_matrix(name.upper(), m)
                 continue
 
             if head in {"latex", "showlatex"}:
-                if len(parts) != 2:
-                    raise ValueError("Usage: latex <VAR> (alias: showlatex <VAR>)")
-                m = require_var(store, parts[1])
-                print_named_latex(parts[1].upper(), m)
+                if len(parts) not in {1, 2}:
+                    raise ValueError("Usage: latex [VAR] (alias: showlatex [VAR])")
+                name = "ANS" if len(parts) == 1 else parts[1]
+                m = require_var(store, name)
+                print_named_latex(name.upper(), m)
                 continue
 
             if head == "clear":
@@ -496,45 +516,59 @@ def run_repl() -> None:
                 continue
 
             if head in {"add", "mul"}:
-                if len(parts) not in {3, 5}:
-                    raise ValueError(f"Usage: {head} X Y [-> Z]")
-                x = require_var(store, parts[1])
-                
-                is_scalar, scalar_val = try_parse_scalar(parts[2])
+                if len(parts) not in {2, 3, 4, 5}:
+                    raise ValueError(f"Usage: {head} [X] Y [-> Z]")
+
+                if len(parts) in {2, 4}:
+                    x = require_var(store, "ANS")
+                    y_token = parts[1]
+                    target = "ANS"
+                    if len(parts) == 4:
+                        target = parse_target(parts, 2, store)
+                else:
+                    x = require_var(store, parts[1])
+                    y_token = parts[2]
+                    target = "ANS"
+                    if len(parts) == 5:
+                        target = parse_target(parts, 3, store)
+
+                is_scalar, scalar_val = try_parse_scalar(y_token)
                 if is_scalar:
                     y = scalar_val
                 else:
-                    y = require_var(store, parts[2])
-                
-                target = "ANS"
-                if len(parts) == 5:
-                    target = parse_target(parts, 3, store)
-                
+                    y = require_var(store, y_token)
+
                 if head == "add":
                     result = x + y
                 else:
                     result = x * y if is_scalar else x @ y
-                
+
                 target = assign_var(store, target, result, update_ans=True, reason=head)
                 print_named_matrix(target, result)
                 continue
 
             if head == "t":
-                if len(parts) not in {2, 4}:
-                    raise ValueError("Usage: T X [-> Z]")
-                x = require_var(store, parts[1])
-                target = "ANS"
-                if len(parts) == 4:
-                    target = parse_target(parts, 2, store)
+                if len(parts) not in {1, 2, 3, 4}:
+                    raise ValueError("Usage: T [X] [-> Z]")
+                if len(parts) in {1, 3}:
+                    x = require_var(store, "ANS")
+                    target = "ANS"
+                    if len(parts) == 3:
+                        target = parse_target(parts, 1, store)
+                else:
+                    x = require_var(store, parts[1])
+                    target = "ANS"
+                    if len(parts) == 4:
+                        target = parse_target(parts, 2, store)
                 result = x.T
                 target = assign_var(store, target, result, update_ans=True, reason="transpose")
                 print_named_matrix(target, result)
                 continue
 
             if head == "det":
-                if len(parts) != 2:
-                    raise ValueError("Usage: det X")
-                x = require_var(store, parts[1])
+                if len(parts) not in {1, 2}:
+                    raise ValueError("Usage: det [X]")
+                x = require_var(store, "ANS" if len(parts) == 1 else parts[1])
                 if x.shape[0] != x.shape[1]:
                     raise ValueError("det requires a square matrix.")
                 value = float(np.linalg.det(x))
@@ -542,14 +576,20 @@ def run_repl() -> None:
                 continue
 
             if head == "inv":
-                if len(parts) not in {2, 4}:
-                    raise ValueError("Usage: inv X [-> Z]")
-                x = require_var(store, parts[1])
+                if len(parts) not in {1, 2, 3, 4}:
+                    raise ValueError("Usage: inv [X] [-> Z]")
+                if len(parts) in {1, 3}:
+                    x = require_var(store, "ANS")
+                    target = "ANS"
+                    if len(parts) == 3:
+                        target = parse_target(parts, 1, store)
+                else:
+                    x = require_var(store, parts[1])
+                    target = "ANS"
+                    if len(parts) == 4:
+                        target = parse_target(parts, 2, store)
                 if x.shape[0] != x.shape[1]:
                     raise ValueError("inv requires a square matrix.")
-                target = "ANS"
-                if len(parts) == 4:
-                    target = parse_target(parts, 2, store)
                 try:
                     result = np.linalg.inv(x)
                 except np.linalg.LinAlgError as e:
@@ -559,9 +599,9 @@ def run_repl() -> None:
                 continue
 
             if head == "rank":
-                if len(parts) != 2:
-                    raise ValueError("Usage: rank X")
-                x = require_var(store, parts[1])
+                if len(parts) not in {1, 2}:
+                    raise ValueError("Usage: rank [X]")
+                x = require_var(store, "ANS" if len(parts) == 1 else parts[1])
                 value = float(np.linalg.matrix_rank(x))
                 print(f"{value:.10g}")
                 continue
@@ -617,15 +657,23 @@ def run_repl() -> None:
                 continue
 
             if head in {"delrow", "delcol"}:
-                if len(parts) not in {3, 5}:
+                if len(parts) not in {2, 3, 4, 5}:
                     if head == "delrow":
-                        raise ValueError("Usage: delrow X i [-> Z] (i is 1-based)")
-                    raise ValueError("Usage: delcol X j [-> Z] (j is 1-based)")
-                x = require_var(store, parts[1])
-                idx = int(parts[2])
-                target = "ANS"
-                if len(parts) == 5:
-                    target = parse_target(parts, 3, store)
+                        raise ValueError("Usage: delrow [X] i [-> Z] (i is 1-based)")
+                    raise ValueError("Usage: delcol [X] j [-> Z] (j is 1-based)")
+
+                if len(parts) in {2, 4}:
+                    x = require_var(store, "ANS")
+                    idx = int(parts[1])
+                    target = "ANS"
+                    if len(parts) == 4:
+                        target = parse_target(parts, 2, store)
+                else:
+                    x = require_var(store, parts[1])
+                    idx = int(parts[2])
+                    target = "ANS"
+                    if len(parts) == 5:
+                        target = parse_target(parts, 3, store)
 
                 if head == "delrow":
                     if x.shape[0] <= 1:
@@ -663,20 +711,75 @@ def run_repl() -> None:
                 continue
 
             if head in {"permrow", "permcol"}:
-                if len(parts) < 4:
+                if len(parts) < 2:
                     if head == "permrow":
-                        raise ValueError("Usage: permrow X i1 i2 ... [-> Z]")
-                    raise ValueError("Usage: permcol X j1 j2 ... [-> Z]")
+                        raise ValueError("Usage: permrow [X] i1 i2 ... [-> Z]")
+                    raise ValueError("Usage: permcol [X] j1 j2 ... [-> Z]")
 
-                x = require_var(store, parts[1])
+                use_ans = False
+                try:
+                    int(parts[1])
+                    use_ans = True
+                except ValueError:
+                    use_ans = False
+
+                if use_ans:
+                    x = require_var(store, "ANS")
+                    order_tokens = parts[1:]
+                else:
+                    if len(parts) < 4:
+                        if head == "permrow":
+                            raise ValueError("Usage: permrow [X] i1 i2 ... [-> Z]")
+                        raise ValueError("Usage: permcol [X] j1 j2 ... [-> Z]")
+                    x = require_var(store, parts[1])
+                    order_tokens = parts[2:]
+
                 expected_len = x.shape[0] if head == "permrow" else x.shape[1]
-                order, target = parse_order_with_optional_target(parts[2:], expected_len, store)
+                order, target = parse_order_with_optional_target(order_tokens, expected_len, store)
                 zero_based = [i - 1 for i in order]
 
                 if head == "permrow":
                     result = x[zero_based, :]
                 else:
                     result = x[:, zero_based]
+
+                target = assign_var(store, target, result, update_ans=True, reason=head)
+                print_named_matrix(target, result)
+                continue
+
+            if head in {"invpermcol", "invpermrow"}:
+                if len(parts) < 2:
+                    if head == "invpermcol":
+                        raise ValueError("Usage: invpermcol [X] p1 ... pn [-> Z]")
+                    raise ValueError("Usage: invpermrow [X] p1 ... pn [-> Z]")
+
+                use_ans = False
+                try:
+                    int(parts[1])
+                    use_ans = True
+                except ValueError:
+                    use_ans = False
+
+                if use_ans:
+                    x = require_var(store, "ANS")
+                    label_tokens = parts[1:]
+                else:
+                    if len(parts) < 4:
+                        if head == "invpermcol":
+                            raise ValueError("Usage: invpermcol [X] p1 ... pn [-> Z]")
+                        raise ValueError("Usage: invpermrow [X] p1 ... pn [-> Z]")
+                    x = require_var(store, parts[1])
+                    label_tokens = parts[2:]
+
+                expected_len = x.shape[1] if head == "invpermcol" else x.shape[0]
+                labels, target = parse_full_permutation_with_optional_target(
+                    label_tokens, expected_len, store
+                )
+
+                # labels[k] means current row/col k corresponds to original index labels[k].
+                # argsort gives the inverse permutation that restores to canonical 1..n order.
+                inverse_order = np.argsort(np.array(labels, dtype=int))
+                result = x[:, inverse_order] if head == "invpermcol" else x[inverse_order, :]
 
                 target = assign_var(store, target, result, update_ans=True, reason=head)
                 print_named_matrix(target, result)
