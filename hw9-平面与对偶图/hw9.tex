@@ -1,0 +1,102 @@
+\documentclass[utf8]{ctexart}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{booktabs}
+\usepackage{array}
+
+\geometry{margin=2cm}
+
+\definecolor{critical}{RGB}{200,40,40}
+\definecolor{nodeblue}{RGB}{52,120,200}
+\definecolor{nodegray}{RGB}{215,228,242}
+\definecolor{critnodebg}{RGB}{255,218,218}
+
+\usetikzlibrary{graphs, positioning, arrows.meta}
+
+\geometry{a4paper, margin=2.5cm}
+
+% 定理环境
+\newtheoremstyle{mystyle}
+  {8pt}{8pt}{\kaishu}{0pt}{\bfseries}{}{1em}{}
+\theoremstyle{mystyle}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+
+% 好看的题目框
+\newmdenv[
+  linecolor=black!40,
+  linewidth=1pt,
+  backgroundcolor=gray!8,
+  roundcorner=5pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+]{problembox}
+
+\title{\textbf{离散数学2\quad 作业9}}
+\date{\today}
+\author{李子嘉 2024012325}
+\begin{document}
+\maketitle
+
+\section*{题目1}
+
+\begin{problembox}
+  证明：在 $n \geq 4$ 的极大平面图中，每个顶点的度数至少为 $3$。
+\end{problembox}
+\textbf{解：} 
+我们知道，极大平面图具备以下性质：
+\begin{itemize}
+  \item $ m = 3n - 6 $，其中 $n$ 是顶点数，$m$ 是边数。
+  \item $ r = 2n - 4 $，其中 $r$ 是面数。
+  \item $G$ 的每个域都是三角形，每条边都被两个不同的面共享，即 $2m = 3r$。
+\end{itemize}
+因此，每条边都被两个三角形共享，显而易见，每个顶点至少连接三条边，否则无法形成2个三角形。换言之，每个顶点的度数至少为 $3$。
+严格地，我们假设存在一个顶点 $x$，$\deg(x) = 2$，设两个邻居为$u$和$v$，则$uvx$构成一个三角形。由于边$(u,x)$被两个三角形共享，那么必然另有一个顶点$w$使得$uwx$也是一个三角形，因此$w$与$x$有边相连，这与$\deg(x) = 2$矛盾。因此，$\deg(x) \geq 3$，得证。
+
+\section*{题目2}
+\begin{problembox}
+设图 $G$ 是 $n$个点$m$条边的简单平面图，且$G$是自对偶图，证明：$m=2n-2$。
+\end{problembox}
+\textbf{解：}
+由于 $G$ 是自对偶图，所以 $G$ 的面数 $r$ 等于顶点数 $n$，即 $r = n$。根据欧拉公式，我们有：
+\[n - m + r = 2 \implies n - m + n = 2 \implies 2n - m = 2 \implies m = 2n - 2\]
+得证。
+
+\section*{题目3}
+\begin{problembox}
+假定一个带有 $m$ 条边和 $n$ 个顶点的连通简单平面图不包含长度为4或更短的回路，证明：若 $n \geq 4$，则 $m \leq \frac{5}{3}n - \frac{10}{3}$。
+\end{problembox}
+\textbf{解：}
+由题可知，图 $G$ 中没有长度为4或更短的回路，因此每个域至少由5条边围成。因此我们有：
+\[2m \geq 5r\]
+其中 $r$ 是面数。结合欧拉公式 $n - m + r = 2$，我们可以得到：
+\[n - m + \frac{2m}{5} = 2\]
+整理得：
+\[n - m + \frac{2m}{5} = 2 \implies n - \frac{3m}{5} = 2 \implies \frac{3m}{5} = n - 2 \implies m = \frac{5}{3}(n - 2) = \frac{5}{3}n - \frac{10}{3}\]
+得证。
+
+\section*{题目4}
+\begin{problembox}
+设简单连通图 $G$ 的顶点数是15，其中8个点的度数是4，6个点的度数是6，一个点的度数是8，证明：$G$ 不是平面图。
+\end{problembox}
+\textbf{解：}
+根据题目，我们可以计算图 $G$ 的边数 $m$：
+\[m = \frac{1}{2} \sum_{v \in V} \deg(v) = \frac{1}{2} (8 \cdot 4 + 6 \cdot 6 + 1 \cdot 8) = \frac{1}{2} (32 + 36 + 8) = \frac{1}{2} \cdot 76 = 38\]
+根据欧拉公式，$n=15, m=38, r=25$.
+由于原图无环或重边，每个域至少有3条边，我们关注到$3r=75$接近$2m=76$，做个简单的鸡兔同笼问题：
+设有$x$个域由3条边围成，$y$个域由4条边围成（不可能有5条边围成，否则$71/3 < 24$），则：
+\[\begin{cases}
+3x + 4y = 76 \\
+x + y = 25
+\end{cases}\]
+解得$x=24, y=1$，即有24个域由3条边围成，1个域由4条边围成。
+假设原图是平面图，我们对其唯一的四边形面，加一条边连接其对角线，得到新图$G'$，则$G'$有15个顶点，39条边，26个面。由于$3r=2m=78, m=3n-6=39$，，因此$G'$是一个极大平面图。
+而对于新图，总度数需为$6n-12=78$，但原图中已经有一个顶点的度数为8，其他顶点的度数不变，因此新图中至少有一个顶点的度数大于或等于8，这与极大平面图中每个顶点的度数至少为3且不超过5矛盾。因此，原图$G$不是平面图。
+\end{document}
