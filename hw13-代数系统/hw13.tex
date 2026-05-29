@@ -1,0 +1,154 @@
+\documentclass[utf8]{ctexart}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{booktabs}
+\usepackage{array}
+
+\geometry{margin=2cm}
+
+\definecolor{critical}{RGB}{200,40,40}
+\definecolor{nodeblue}{RGB}{52,120,200}
+\definecolor{nodegray}{RGB}{215,228,242}
+\definecolor{critnodebg}{RGB}{255,218,218}
+
+\usetikzlibrary{graphs, positioning, arrows.meta}
+
+\geometry{a4paper, margin=2.5cm}
+
+% 定理环境
+\newtheoremstyle{mystyle}
+  {8pt}{8pt}{\kaishu}{0pt}{\bfseries}{}{1em}{}
+\theoremstyle{mystyle}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+
+% 好看的题目框
+\newmdenv[
+  linecolor=black!40,
+  linewidth=1pt,
+  backgroundcolor=gray!8,
+  roundcorner=5pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+]{problembox}
+
+\title{\textbf{离散数学2\quad 作业13}}
+\date{\today}
+\author{李子嘉 2024012325}
+\begin{document}
+\maketitle
+
+\section*{题目1}
+
+\begin{problembox}
+  代数系统 $V = (R, *) $ 中，$R$ 是实数集合，二元运算 $*$ 分别定义如下：
+\begin{itemize}
+  \item $a_1 * a_2 = |a_1 -a_2|$。
+  \item $a_1 * a_2 = (a_1 + a_2) / 2$。
+\end{itemize}
+对每一种情况，$ V $ 是否可结合或可交换？是否存在单位元？如果有，每个元素是否都是可逆的？
+\end{problembox}
+\textbf{解：}
+\subsection*{情况1：$a_1 * a_2 = |a_1 - a_2|$}
+\begin{itemize}
+  \item \textbf{结合性：不满足}。举例：$ (1 * 2) * 3 = |1 - 2| * 3 = 1 * 3 = |1 - 3| = 2 $，而 $ 1 * (2 * 3) = 1 * |2 - 3| = 1 * 1 = |1 - 1| = 0 $，所以 $ (1 * 2) * 3 \neq 1 * (2 * 3) $。
+  
+  \item \textbf{交换性：满足}。因为绝对值函数满足交换律，即 $ |a_1 - a_2| = |a_2 - a_1| $。
+  
+  \item \textbf{单位元：存在}。单位元为 $0$，因为对于任意实数 $a$，有 $a * 0 = |a - 0| = |a|$ 和 $0 * a = |0 - a| = |a|$。
+  
+  \item \textbf{可逆性：存在} 对于任意实数 $a$，其逆元素为 $a$，因为 $a * a = |a - a| = 0$，满足 $a * a = e$，其中 $e$ 是单位元。
+\end{itemize}
+
+\subsection*{情况2：$a_1 * a_2 = (a_1 + a_2) / 2$}
+\begin{itemize}
+  \item \textbf{结合性：不满足}。因为 $((a_1 * a_2) * a_3) = ((a_1 + a_2) / 2 + a_3) / 2 = (a_1 + a_2 + 2a_3) / 4$，而 $(a_1 * (a_2 * a_3)) = (a_1 + (a_2 + a_3) / 2) / 2 = (2a_1 + a_2 + a_3) / 4$，所以 $((a_1 * a_2) * a_3) \neq (a_1 * (a_2 * a_3))$，举反例：$a_1 = 1, a_2 = 2, a_3 = 3$，则 $((1 * 2) * 3) = ((1 + 2) / 2 + 3) / 2 = (1.5 + 3) / 2 = 4.5 / 2 = 2.25$，而 $(1 * (2 * 3)) = (1 + (2 + 3) / 2) / 2 = (1 + 2.5) / 2 = 3.5 / 2 = 1.75$，所以 $((1 * 2) * 3) \neq (1 * (2 * 3))$。
+  
+  \item \textbf{交换性：满足}。因为加法满足交换律，即 $ (a_1 + a_2) / 2 = (a_2 + a_1) / 2 $。
+  
+  \item \textbf{单位元：不存在}。若存在，则有一个元素 $e$ 满足 $(a + e) / 2 = a$ 和 $(e + a) / 2 = a$。解方程可得 $e = a$，但这不满足单位元的定义，因为单位元必须对所有元素都有效。
+  
+  \item \textbf{可逆性：不存在}。因为没有单位元，所以也不存在逆元素。
+\end{itemize}
+
+\section*{题目2}
+\begin{problembox}
+  已知代数系统 $(S, *)$ 和 $(P, \cdot)$，其中 $S = \{a, b, c\}$，$P = \{1, 2, 3\}$，二元运算分别定义见书，此处不赘述。试证明它们是同构的。
+\end{problembox}
+\begin{proof}
+我们定义一个映射 $f: S \to P$，使得 $f(a) = 3$，$f(b) = 1$，$f(c) = 2$。易知道 $f$ 是一个双射。接下来，我们验证 $f$ 保持运算结构，即对于任意 $x, y \in S$，有 $f(x * y) = f(x) \cdot f(y)$。
+我们逐一验证：
+\begin{itemize}
+  \item $f(a * a) = f(a) = 3$，而 $f(a) \cdot f(a) = 3 \cdot 3 = 3$，满足。
+  
+  \item $f(a * b) = f(b) = 1$，而 $f(a) \cdot f(b) = 3 \cdot 1 = 1$，满足。
+  
+  \item $f(a * c) = f(c) = 2$，而 $f(a) \cdot f(c) = 3 \cdot 2 = 2$，满足。
+  
+  \item $f(b * a) = f(b) = 1$，而 $f(b) \cdot f(a) = 1 \cdot 3 = 1$，满足。
+  
+  \item $f(b * b) = f(b) = 1$，而 $f(b) \cdot f(b) = 1 \cdot 1 = 1$，满足。
+  
+  \item $f(b * c) = f(c) = 2$，而 $f(b) \cdot f(c) = 1 \cdot 2 = 2$，满足。
+  
+  \item $f(c * a) = f(c) = 2$，而 $f(c) \cdot f(a) = 2 \cdot 3 = 2$，满足。
+  
+  \item $f(c * b) = f(b) = 1$，而 $f(c) \cdot f(b) = 2 \cdot 1 = 1$，满足。
+  
+  \item $f(c * c) = f(c) = 2$，而 $f(c) \cdot f(c) = 2 \cdot 2 = 2$，满足。
+\end{itemize}
+因此 $(S, *)$ 和 $(P, \cdot)$ 是同构的。
+\end{proof}
+
+\newpage
+\section*{题目3}
+\begin{problembox}
+  设 $G=(\mathbb{Z}, \cdot)$，对任意的 $a, b \in \mathbb{Z}$，定义 $a \cdot b = a + b - 2$。证明 $G$ 是一个群。
+\end{problembox}
+\begin{proof}
+我们需要验证 $G$ 满足群的四个条件：封闭性、结合性、存在幺元和存在逆元素。
+\begin{itemize}
+  \item \textbf{封闭性：} 对任意 $a, b \in \mathbb{Z}$，$a \cdot b = a + b - 2$ 仍然是一个整数，因此 $G$ 在 $\mathbb{Z}$ 上封闭。
+  
+  \item \textbf{结合性：} 对任意 $a, b, c \in \mathbb{Z}$，我们需要验证 $(a \cdot b) \cdot c = a \cdot (b \cdot c)$。
+  计算左边：
+  \[
+  (a \cdot b) \cdot c = (a + b - 2) \cdot c = (a + b - 2) + c - 2 = a + b + c - 4
+  \]
+  计算右边：
+  \[
+  a \cdot (b \cdot c) = a \cdot (b + c - 2) = a + (b + c - 2) - 2 = a + b + c - 4
+  \]
+  因此 $(a \cdot b) \cdot c = a \cdot (b \cdot c)$，满足结合性。
+  
+  \item \textbf{存在幺元：} 我们需要找到一个元素 $e$ 满足 $a \cdot e = e \cdot a = a$ 对所有 $a \in G$ 都成立。设 $e$ 是幺元，则有：
+  \[
+  a \cdot e = a + e - 2 = a
+  \]
+  解方程可得 $e = 2$。同样验证右侧：
+  \[
+  e \cdot a = e + a - 2 = a
+  \]
+  因此幺元为 $2$。
+  
+  \item \textbf{存在逆元素：} 对任意 $a \in G$，我们需要找到一个元素 $b$ 满足 $a \cdot b = b \cdot a = e$，其中 $e$ 是幺元。设 $b$ 是 $a$ 的逆元素，则有：
+  \[
+  a \cdot b = a + b - 2 = 2
+  \]
+  解方程可得 $b = 4 - a$。同样验证右侧：
+  \[
+  b \cdot a = b + a - 2 = 2
+  \]
+  因此逆元素为 $4 - a$。
+\end{itemize}
+因此 $G$ 是一个群。
+\end{proof}
+
+\end{document}
