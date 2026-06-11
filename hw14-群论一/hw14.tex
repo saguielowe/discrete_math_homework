@@ -1,0 +1,92 @@
+\documentclass[utf8]{ctexart}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{booktabs}
+\usepackage{array}
+
+\geometry{margin=2cm}
+
+\definecolor{critical}{RGB}{200,40,40}
+\definecolor{nodeblue}{RGB}{52,120,200}
+\definecolor{nodegray}{RGB}{215,228,242}
+\definecolor{critnodebg}{RGB}{255,218,218}
+
+\usetikzlibrary{graphs, positioning, arrows.meta}
+
+\geometry{a4paper, margin=2.5cm}
+
+% 定理环境
+\newtheoremstyle{mystyle}
+  {8pt}{8pt}{\kaishu}{0pt}{\bfseries}{}{1em}{}
+\theoremstyle{mystyle}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+
+% 好看的题目框
+\newmdenv[
+  linecolor=black!40,
+  linewidth=1pt,
+  backgroundcolor=gray!8,
+  roundcorner=5pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+]{problembox}
+
+\title{\textbf{离散数学2\quad 作业14}}
+\date{\today}
+\author{李子嘉 2024012325}
+\begin{document}
+\maketitle
+
+\section*{题目1}
+
+\begin{problembox}
+ 求剩余类加群 $(\mathbb{Z}_{100}, +)$ 的所有子群。
+\end{problembox}
+\textbf{解：} 
+由于 $\mathbb{Z}_{100}$ 是一个循环群，其生成元为 $1$，因此 $\mathbb{Z}_{100}$ 的子群也都是循环群。根据循环群的性质，$\mathbb{Z}_{100}$ 的子群对应于其阶 $100$ 的所有约数。$100$ 的约数有 $1, 2, 4, 5, 10, 20, 25, 50, 100$。因此，
+$\mathbb{Z}_{100}$ 的子群为 
+
+$\{0\}, \{0, 50\}, \{0, 25, 50, 75\}, \{0, 20, 40, 60, 80\}, \{0, 10, 20, \ldots, 90\}, $
+
+$\{0, 5, 10, \ldots, 95\}, \{0, 4, 8, \ldots, 96\}, \{0, 2, 4, \ldots, 98\}, \mathbb{Z}_{100}$ 。
+
+\section*{题目2}
+\begin{problembox}
+在$S_6$中设：
+$\sigma = \begin{bmatrix}
+1 & 2 & 3 & 4 & 5 & 6\\
+4 & 3 & 5 & 6 & 1 & 2
+\end{bmatrix}$，
+$\tau = \begin{bmatrix}1 & 2 & 3 & 4 & 5 & 6\\
+2 & 1 & 5 & 6 & 3 & 4
+\end{bmatrix}$。
+
+试计算 $\sigma\tau, \tau\sigma, \sigma^{-1}, \sigma\tau\sigma^{-1}$，同时将它们表成对换之积。
+\end{problembox}
+\textbf{解：}
+首先，我们将 $\sigma$ 和 $\tau$ 转换成循环表示：
+$\sigma = (4\ 6\ 2\ 3\ 5\ 1)$，$\tau = (1\ 2)(3\ 5)(4\ 6)$。
+
+随后，我们计算 $\sigma\tau$ 和 $\tau\sigma$：
+$\sigma\tau = (1\ 3)(2\ 4)$，$\tau\sigma = (1\ 6)(2\ 5)$，$\sigma^{-1} = (1\ 5\ 3\ 2\ 6\ 4) = (1\ 5)(5\ 3)(3\ 2)(2\ 6)(6\ 4)$，$\sigma\tau\sigma^{-1} = (4\ 3)(5\ 1)(6\ 2)$。
+\section*{题目3}
+\begin{problembox}
+求交错群 $A_4$ 。
+\end{problembox}
+\textbf{解：}
+交错群 $A_4$ 是对称群 $S_4$ 的一个子群，包含所有偶置换。$A_4$ 的元素包括：
+\begin{enumerate}
+  \item 恒等置换 $e$。
+  \item 3-循环 $(1\ 2\ 3), (1\ 3\ 2), (1\ 2\ 4), (1\ 4\ 2), (1\ 3\ 4), (1\ 4\ 3), (2\ 3\ 4), (2\ 4\ 3)$
+  \item 2+2轮换 $(1\ 2)(3\ 4), (1\ 3)(2\ 4), (1\ 4)(2\ 3)$。
+\end{enumerate}
+因此，$A_4$ 的元素为 $e, (1\ 2\ 3), (1\ 3\ 2), (1\ 2\ 4), (1\ 4\ 2), (1\ 3\ 4), (1\ 4\ 3), (2\ 3\ 4), (2\ 4\ 3), (1\ 2)(3\ 4), (1\ 3)(2\ 4), (1\ 4)(2\ 3)$，共12个元素。
+\end{document}
