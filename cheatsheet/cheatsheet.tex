@@ -22,9 +22,9 @@
 \renewcommand{\baselinestretch}{0.80}
 \setlist{nosep,leftmargin=*,itemsep=0pt,topsep=0pt,partopsep=0pt}
 
-\titleformat{\section}{\bfseries\small}{}{0em}{}[\vspace{-0.5em}]
+\titleformat{\section}{\bfseries\large}{}{0em}{}[\vspace{-0.5em}]
 \titlespacing{\section}{0pt}{2pt}{1pt}
-\titleformat{\subsection}{\bfseries\footnotesize}{}{0em}{}[\vspace{-0.3em}]
+\titleformat{\subsection}{\bfseries\normalsize}{}{0em}{}[\vspace{-0.3em}]
 \titlespacing{\subsection}{0pt}{1pt}{0pt}
 
 \begin{document}
@@ -32,7 +32,7 @@
 \setlength{\columnseprule}{0.3pt}
 
 \begin{multicols}{3}
-\fontsize{5.8}{6.8}\selectfont
+\fontsize{10}{11}\selectfont
 
 % ==================== 1. 图的基本概念 ====================
 \section*{1. 图的基本概念}
@@ -54,6 +54,17 @@ $\Delta(G)=\max d(v)$，$\delta(G)=\min d(v)$。
 \textbf{同构} $G_1\cong G_2$：双射 $f:V_1\to V_2$，$(u,v)\in E_1\iff(f(u),f(v))\in E_2$，重数相同。
 必要非充分条件：顶点数、边数、度数列、邻域大小相同。充要：补图同构 $\lor$ 邻接矩阵行列置换可得。
 
+\textbf{经典3-正则6点图（注意区分！）}：
+三棱柱 $P_3\times K_2$（六边形+横竖竖）：含 $C_3$（三角形），非二分图。
+$K_{3,3}$（六边形+对角线）：二分图，\textbf{无奇环}，最小环长=4。两者度数列相同但不同构。
+
+\textbf{区分同构的王炸方法}（由弱到强）：
+\begin{itemize}
+\item 二分图性：二分图无奇回路，若一有一无则不同构
+\item 环谱：数各长度环的个数。如上两图：$K_{3,3}$ 无 $C_3$，三棱柱有 $C_3$
+\item \textbf{距离层}（最强区分）：对每个顶点 $v$，统计从 $v$ 出发经 $k$ 步到达的顶点数 $n_k(v)$。同构图必须对所有 $k$ 和 $v$ 匹配。即使度数列相同，距离层分布不同也可秒杀
+\end{itemize}
+
 \textbf{同构判定}：未证明是P或NPC。Babai(2015)拟多项式算法。树和平面图同构有多项式算法。
 
 \textbf{特殊图}：$K_n$（$m=n(n-1)/2$），$C_n$（$n\geq 3$），$W_n$（$n\geq 4$，$C_{n-1}$+中心）。
@@ -63,9 +74,9 @@ $\Delta(G)=\max d(v)$，$\delta(G)=\min d(v)$。
 
 \textbf{定理}：非空简单图必存在度相同顶点（鸽巢：$n$ 顶点的度 $\in[0,n-1]$ 或 $[1,n-1]$ 共 $n-1$ 种取值）。
 
-\textbf{Ramsey}：$R(3,3)=6$。$R(a,b)$ 存在性已知，具体值大多未解。
-
-\textbf{图论经典问题}：欧拉回路（1736）、哈密顿回路（1856）、中国邮递员（管梅谷1962）、平面图、着色、匹配、网络流。
+\textbf{Ramsey数} $R(a,b)$：最小 $n$ 使任意 $n$ 阶简单图必含 $K_a$ 或 $\bar{K}_b$（即独立集大小为 $b$）。
+已知值：$R(3,3)=6$，$R(3,4)=9$，$R(3,5)=14$，$R(4,4)=18$，$R(4,5)=25$。
+$R(2,n)=n$。其余大多未知（如 $R(5,5)$ 仅知 $43\leq\cdots\leq 48$）。
 
 \textbf{复杂度}：$f(x)=O(g(x))$ 表 $g$ 限制 $f$ 的增长。多项式归约 $A\leq_p B$：A可转化为B，B可解则A可解。
 
@@ -73,11 +84,18 @@ $\Delta(G)=\max d(v)$，$\delta(G)=\min d(v)$。
 \section*{2. 子图与图的运算}
 
 \textbf{子图} $H\subseteq G$：$V(H)\subseteq V(G),E(H)\subseteq E(G)$。
-\textbf{生成子图}：$V(H)=V(G)$。
+\textbf{生成/支撑子图}：$V(H)=V(G)$。
 \textbf{导出子图} $G[V']$：以 $V'$ 为顶点，保留两端均在 $V'$ 的边。
 \textbf{边导出子图} $G[E']$：以 $E'$ 为边，顶点取 $E'$ 关联的所有顶点。
 
-\textbf{图运算}：$\cup,\cap,\oplus$（环和）、$G-v$、$G-e$、$G+e'$。
+\textbf{图运算}：
+\begin{itemize}
+\item $G_1\cup G_2$：$V_1\cup V_2$，$E_1\cup E_2$（并图）
+\item $G_1\cap G_2$：$V_1\cap V_2$，$E_1\cap E_2$（交图）
+\item \textbf{$G_1\oplus G_2$（环和/对称差）}：$V_1\cup V_2$，$E_1\oplus E_2=(E_1\cup E_2)-(E_1\cap E_2)$。
+  即\textbf{恰在一个图中出现的边}。只有公共顶点，公共边会被消去。
+\item $G-v$（删点）、$G-e$（删边）、$G+e'$（加边）
+\end{itemize}
 $\bar{G}=K_n-G$。若 $G_1\cong G_2$ 则 $\bar{G}_1\cong\bar{G}_2$（充要）。
 
 \textbf{易错}：$G_1\cong G_2$ 当且仅当它们的补图同构（简单图）。
@@ -98,9 +116,9 @@ $(A^k)_{ij}$ = 从 $v_i$ 到 $v_j$ 长为 $k$ 的道路数。无向图 $A$ 对�
 
 \textbf{边列表}：$A(k)$ 始点，$B(k)$ 终点，$W(k)$ 权。空间 $O(m)$。
 
-\textbf{正向表/逆向表}：边列表排序+索引，查后继/前驱 $O(d)$。
+\textbf{正向表}：边列表按始点排序，附加索引数组 $\mathrm{head}[1..n+1]$，$\mathrm{head}[i]$ 指向顶点 $i$ 的第一条出边。查后继 $O(d)$，空间 $O(n+m)$。\textbf{逆向表}同理，按终点排序，查前驱 $O(d)$。
 
-\textbf{邻接表}：每顶点一个链表，$(dst,w,link)$。查后继 $O(d)$。\textbf{十字链表}：邻接+逆邻接合并，每边同时出现在正向和逆向链表，$(src,dst,w,d\_link,s\_link)$。
+\textbf{邻接表}：每顶点一个链表存出边，$(dst,w,nxt)$。查后继 $O(d)$，空间 $O(n+m)$。十字链表（邻接+逆邻接合为一体）几乎不考，略。
 
 \textbf{易错}：邻接矩阵 $O(n^2)$ 空间，对稀疏图浪费（如微信好友50亿人，上限5000）。关联矩阵空间 $O(nm)$。边列表最省 $O(m)$。
 
@@ -112,17 +130,17 @@ $(A^k)_{ij}$ = 从 $v_i$ 到 $v_j$ 长为 $k$ 的道路数。无向图 $A$ 对�
 \textbf{连通}：任意两点有道路。有向：弱连通、单向连通、强连通（依次增强）。
 距离 $d(u,v)$：非负、对称（无向）、三角不等式。有向距离无对称性。
 
-\textbf{定理 2.1}：$\delta(G)\geq 2\implies G$ 含回路。
+\textbf{定理 2.1}：$\delta(G)\geq 2\implies G$ 含回路。每个顶点度数>=2，必有回路，可通过构造最长路径反证。
 
 \textbf{定理}：$m > \frac{1}{2}(n-1)(n-2)\implies G$ 连通（简单图）。
 
-\textbf{割点} $v$：$p(G-v)>p(G)$。等价：(1) $\exists u,w\neq v$，所有 $u$-$w$ 路经 $v$；(2) $G-v$ 可划分两部，其间道路均经 $v$。\textbf{有割点则无H回路}。
+\textbf{割点} $v$：$p(G-v)>p(G)$。等价：(1) $\exists u,w\neq v$，所有 $u$-$w$ 路经 $v$；(2) $G-v$ 可划分两部，其间道路均经 $v$。\textbf{有割点则无H回路}。$p()$：连通支数。
 
 \textbf{割边（桥）} $e$：$p(G-e)>p(G)$。等价：(1) $e$ 不在任何回路；(2) $\exists u,w$ 使每条 $u$-$w$ 路含 $e$；(3) $G-e$ 分两部。
 
 \textbf{点割集}：删去后连通支增加，且极小。\textbf{边割集}：同理。
 \textbf{点断集}：删去后不连通或只剩孤立点（不一定极小）。\textbf{边断集}：删去后不连通。
-\textbf{易错}：点连通度由断集非割集定义。只有2顶点的连通图，点割集是否存在？
+\textbf{易错}：点连通度由断集非割集定义。只有2顶点的连通图，无点割集有点断集（只剩孤立点）。
 
 $\kappa(G)$=点连通度，$\lambda(G)$=边连通度。不连通图 $\kappa=\lambda=0$。$\kappa(K_n)=n-1$。
 
@@ -136,7 +154,7 @@ $\kappa(G)$=点连通度，$\lambda(G)$=边连通度。不连通图 $\kappa=\lam
 % ==================== 5. 欧拉与哈密顿 ====================
 \section*{5. 欧拉回路与哈密顿回路}
 
-\textbf{欧拉道路}：每边恰好一次。\textbf{欧拉回路}：封闭欧拉道路。
+\textbf{欧拉道路}：每边恰好一次。（半欧拉图）\textbf{欧拉回路}：封闭欧拉道路。（欧拉图）
 
 \textbf{无向欧拉回路} $\iff$ 连通且全为偶度。
 \textbf{无向欧拉道路}（非回路）$\iff$ 连通且恰有2奇度点。
@@ -170,17 +188,18 @@ $\kappa(G)$=点连通度，$\lambda(G)$=边连通度。不连通图 $\kappa=\lam
 % ==================== 6. 最短路与TSP ====================
 \section*{6. 最短路与TSP}
 
-\textbf{TSP}：正权完全图最短H回路，NP-完全。分支定界：DFS+下界剪枝，精确解。便宜算法：贪心 $O(n^2)$，近似解 $T/Q<2$。
+\textbf{TSP}：正权完全图最短H回路，NP-完全。精确解：分支定界（按边权从小到大选前n条边，检查是否为回路，否则删最长换更长迭代枚举，直到找到下界。）。近似解：便宜算法，初始单点成环，每次选已有点集与未选点集间的最短边，确定放置环上的对称位置加入环路。）复杂度：$O(n!) vs O(n^2)$，便宜算法不依赖三角不等式，近似比为2。
 
-\textbf{Dijkstra}：正权单源最短路。$\Pi(u)=\min\{\Pi(u),\Pi(v)+w(v,u)\}$。$O(n^2)$。贪心，需最优子结构。不能处理负权边（可能错过更短路径）。
+\textbf{Dijkstra}：正权单源最短路，贪心。$\Pi(u)=\min\{\Pi(u),\Pi(v)+w(v,u)\}$，$O(n^2)$。
+\textbf{不能处理负权边}！反例：$v_1\to v_2(5),v_1\to v_3(8),v_2\to v_3(-5)$，Dijkstra固定$v_1\to v_3=8$后不再更新，实际最短为$v_1\to v_2\to v_3=3$。
 
-\textbf{BFS}：权为1时的最短路，$O(m)$。
+\textbf{BFS}：权为1或无权时的最短路，队列，$O(m)$。
 
-\textbf{Bellman-Ford}：可负权边（不能有负环）。$n-1$ 轮松弛所有边，$O(nm)$。若第 $n$ 轮仍有更新则存在负环。
+\textbf{Bellman-Ford}：可负权边（不能有负回路）。$n-1$轮松弛所有边，$O(nm)$。若第$n$轮仍有更新则存在负回路。与Dijkstra区别：每次松弛所有边而非仅最近更新的。
 
-\textbf{Floyd-Warshall}：全源。$d_{ij}^{(k)}=\min\{d_{ij}^{(k-1)},d_{ik}^{(k-1)}+d_{kj}^{(k-1)}\}$，$O(n^3)$。可负权边，不能负环。
+\textbf{Floyd-Warshall}：全源最短路。$d_{ij}^{(k)}=\min\{d_{ij}^{(k-1)},d_{ik}^{(k-1)}+d_{kj}^{(k-1)}\}$，$O(n^3)$。可负权边，不能负回路。可用于求图的直径（$\max d_{ij}$）。
 
-\textbf{易错}：Dijkstra只能正权（负权反例：v1→v3有8，v1→v2有5，v2→v3有-5，Dijkstra得v1→v2=5，正确应为v1→v3→v2→?→...其实正确v1→v2是3）。Floyd可以负权边但不能有负回路。
+\textbf{易错}：Dijkstra要求正权（含0可以，负权不可以）。Floyd可以负权但不能有负回路。有向图负回路可能只影响部分顶点——若存在负回路，包含回路顶点的最短路无下界。
 
 % ==================== 7. 关键路径与中国邮路 ====================
 \section*{7. 关键路径与中国邮路}
@@ -197,54 +216,102 @@ $\kappa(G)$=点连通度，$\lambda(G)$=边连通度。不连通图 $\kappa=\lam
 
 \textbf{中国邮路}：经每边至少一次回原点的最短回路。欧拉图→欧拉回路即解。
 
-\textbf{无向算法}（奇偶点图上作业法）：(1) 每边最多重复一次；(2) 任一回路上重复边长度 $\leq$ 回路长一半，否则交换。反复调整。
+\textbf{无向算法}（奇偶点图上作业法）：(1) 每边最多重复一次，找奇数度点之间加重边；(2) 任一回路上重复边长度 $\leq$ 回路长一半，否则交换。反复调整。
 
 \textbf{Edmonds-Johnson}：奇度点→最短路→最小权完美匹配→添重复边→欧拉回路。
 
-\textbf{有向中国邮路}：$d'(v_i)=d^-(v_i)-d^+(v_i)$。超发点连 $d'>0$ 点，超收点连 $d'<0$ 点，求最小费用流定重复边。
+\textbf{有向中国邮路}：$d'(v_i)=d^-(v_i)-d^+(v_i)$。$d'>0$发、$d'<0$收，求最小费用最大流定重复边（但不考最小费用流，此部分了解即可）。
 
-% ==================== 8-9. 树 ====================
-\section*{8. 树与支撑树}
+% ==================== 8. 关联矩阵与支撑树计数 ====================
+\section*{8. 关联矩阵与支撑树计数}
 
-\textbf{树}：连通无回路。\textbf{林}：无回路（可不连通）。
+\subsection*{8a. 树的基础}
 
-\textbf{树的6个等价定义}（$n$ 点 $m$ 边）：
-(1) 连通无回路 (2) 每对顶点间唯一道路
-(3) 无回路且 $m=n-1$ (4) 连通且 $m=n-1$
-(5) 连通且每条边是桥 (6) 无回路，加任一边得唯一回路
+\textbf{树}：连通无回路。\textbf{林}：无回路。树的6等价：连通无回路 / 唯一道路 / 无回路 $m=n-1$ / 连通 $m=n-1$ / 每边是桥 / 无回路+加边得唯一回路。
 
-\textbf{支撑树}：含所有顶点的树。破圈法、避圈法（DFS/BFS）构造。
+\textbf{Cayley公式}：$K_n$ 的支撑树个数 $=n^{n-2}$。
 
-\textbf{Cayley}：$K_n$ 支撑树数 $=n^{n-2}$。
+\subsection*{8b. 关联矩阵 $B$ 与基本关联矩阵 $B_k$}
 
-\textbf{Kirchhoff 矩阵树定理}：$t(G)=\det(L$ 的任意 $n-1$ 阶主子式$)$。$t(G)=|B_kB_k^T|$。$t(G)=\frac{1}{n}\lambda_2\cdots\lambda_n$（$\lambda_i$为$L$非零特征值）。
+\textbf{关联矩阵} $B=(b_{ij})_{n\times m}$：给无向图每条边\textbf{任意}定向，本列中起点填$+1$、终点填$-1$、无关填$0$。每列恰一个$+1$和一个$-1$，每行对应一个顶点。（无向图关联矩阵没法用）
 
-\textbf{根树}：有向树，一根入度0，余入度1。以 $v_k$ 为根的根树数 $=\det(\bar{B}_k\bar{B}_k^T)$（$\bar{B}_k$ 为 $B_k$ 中1改0）。
+\textbf{基本关联矩阵} $B_k$：从 $B$ 划去参考点 $v_k$ 所在行（相当于把该点"接地"），得 $(n-1)\times m$ 矩阵。连通时 $\boxed{\operatorname{rank}(B_k)=n-1}$。
 
-\textbf{基本关联矩阵} $B_k$：删第 $k$ 行，$\text{rank}(B_k)=n-1$。$n-1$ 阶子阵行列式 $\neq 0\iff$ 列对应支撑树。
+\textbf{核心定理}：从 $B_k$ 任取 $n-1$ 列（即 $n-1$ 条边）拼成 $(n-1)\times(n-1)$ 方阵，则
+$\boxed{\text{行列式}\neq0 \iff \text{这 }n-1\text{ 条边恰好是一棵支撑树}}$
+且此时行列式必为 $\pm1$（不是$+1$就是$-1$，绝不可能是别的数）。
 
-\textbf{Binet–Cauchy}：$A_{m\times n}B_{n\times m}$（$m\leq n$），$\det(AB)=\sum|A_i||B_i|$。
+\subsection*{8c. Kirchhoff矩阵树定理}
 
-\textbf{支撑树计数}：不含 $e$ → $G-e$；必含 $e$ → 收缩 $e$ 或总数减不含。
+\textbf{Laplacian矩阵} $L=D-A$（度矩阵$-$邻接矩阵），恒有 $L=BB^T$，半正定，最小特征值 $\lambda_1=0$。
 
-\section*{9. 回路/割集矩阵、MST、Huffman}
+\textbf{矩阵树定理}：$\boxed{\text{支撑树总数}=\det(L_k)=\det(B_kB_k^T)}$，其中 $L_k$ 是划去 $L$ 第 $k$ 行第 $k$ 列剩下的 $(n-1)$ 阶方阵（划哪行哪列都行，结果一样）。等价写法：$\displaystyle\frac{1}{n}\lambda_2\lambda_3\cdots\lambda_n$（$L$ 的所有非零特征值之积除以 $n$）。
 
-\textbf{回路矩阵} $C_e$：行=回路，列=边。$C_{ij}\in\{-1,0,1\}$。
-$BC_e^T=0$。$\text{rank}(C_e)=m-n+1$。\textbf{基本回路矩阵} $C_f=[I,C_{f12}]$。
+\subsection*{8d. 支撑树计数：含/不含某边的操作}
 
-\textbf{割集矩阵} $S_e$：行=割集。$S_eC_e^T=0$。$\text{rank}(S_e)=n-1$。
-\textbf{基本割集矩阵} $S_f=[S_{f11},I]$。$S_{f11}=-C_{f12}^T$。
+以下用 $\tau(G)$ 表示图 $G$ 的支撑树总数。一般可以通过任意的基本关联矩阵*其转置的行列式来求。
 
-\textbf{关系}：$C_{f12}=-B_{k11}^{-1}B_{k12}$；$S_{f11}=-C_{f12}^T$。
+\textbf{不含某边 $e$}：直接把 $e$ 删掉，对剩下的图求支撑树数。$\boxed{\tau_{\text{不含}e}=\tau(G-e)}$。
 
-\textbf{MST}：
+\textbf{必含某边 $e$}：把 $e$ 两端点粘成一个点（收缩 $e$，记作 $G/e$），对新图求支撑树数。$\boxed{\tau_{\text{含}e}=\tau(G/e)}$。等价地：$\tau(G/e)=\tau(G)-\tau(G-e)$（总数$-$不含$e$的）。
+
+\textbf{多个条件混合}：确定根树时，如果要求必含某条边，可以把终点顶点其余的入边删掉直接计算；如果没指定根树，必须用收缩法。
+
+\textbf{指定根 $v_k$ 的有根树}：删掉唯一的k行做基本关联矩阵，并把 $B_k$ 中所有 $+1$ 改成 $0$（只留入边的 $-1$），记为 $\bar{B}_k$。以 $v_k$ 为根的根树数 $=\boxed{\det(\bar{B}_k\bar{B}_k^T)}$。
+
+\textbf{对偶图}：$\tau(G^*)=\tau(G)$（平面图的对偶图支撑树数相同）。
+
+\textbf{结论}：完全图 $K_n$ 的支撑树数 $=n^{n-2}$，完全二分图 $K_{m,n}$ 的支撑树数 $=m^{n-1}n^{m-1}$。
+
+\subsection*{8e. 回路矩阵/割集矩阵：与 $B_k$ 的换算}
+
+\textbf{回路矩阵} $C_e$（完全回路矩阵）：行=回路，列=边。$C_{ij}=+1$（$e_j$与回路同行向）、$-1$（反向）、$0$（不在回路中）。秩 $=m-n+1$，回路之间不独立。
+
+\textbf{割集矩阵} $S_e$（完全割集矩阵）：行=割集，列=边。$S_{ij}=+1$（$e_j$在割集中且与割集同向）、$-1$（反向）、$0$（不在割集中）。秩 $=n-1$。割集之间不独立。
+
+\textbf{基本回路 / 基本割集}：选定一棵支撑树 $T$，把所有边排成"\textbf{先余树边，后树边}"的顺序：
 \begin{itemize}
-\item \textbf{Prim}：从一点扩展，选连 $V'$ 与 $V-V'$ 的最短边。$O(n^2)$。稠密图。
-\item \textbf{Kruskal}：边排序+并查集。$O(m\log m)$。稀疏图。两个优化：小并大、路径压缩→均摊 $O(\alpha(n))$。
+\item 余树边：不在 $T$ 上的边，共 $m-n+1$ 条
+\item 树边：$T$ 上的边，共 $n-1$ 条
 \end{itemize}
-二者皆贪心，均得最优解。
 
-\textbf{Huffman树}：最优二叉树。$WPL=\sum w_i l_i$ 最小。构造：每次合并两个最小权节点，$O(n\log n)$。最佳前缀码不唯一（等权选法不唯一、左右可换）。
+按此顺序把 $B_k$ 切成两块：$\boxed{B_k=[\;B_{\text{余}}\;\mid\;B_{\text{树}}\;]}$，其中 $B_{\text{树}}$ 是 $(n-1)\times(n-1)$ 方阵且可逆（因为它的列正好对应一棵支撑树）。
+
+\textbf{基本回路矩阵 $C_f$}：每行=一个基本回路（加一条余树边到 $T$ 中形成的唯一回路）。
+按同样顺序（先余树边后树边）：$\boxed{C_f=[\;I_{m-n+1}\;\mid\;C_{f12}\;]}$。
+
+推导：由 $B_kC_f^T=0$ 即 $[B_{\text{余}}\;B_{\text{树}}]\cdot[I\;C_{f12}]^T=0\;\Rightarrow\;B_{\text{余}}+B_{\text{树}}C_{f12}^T=0$
+$\Rightarrow\;C_{f12}^T=-B_{\text{树}}^{-1}B_{\text{余}}\;\Rightarrow\;\boxed{C_{f12}=-(B_{\text{树}}^{-1}B_{\text{余}})^T}$
+
+\textbf{基本割集矩阵 $S_f$}：每行=一个基本割集（树边里面选一条，余树边里面选多条，目标是把顶点边删掉，官方生成树肯定连接到了，因此树里面必删一条）
+$\boxed{S_f=[\;S_{f11}\;\mid\;I_{n-1}\;]}$。
+
+由 $S_{f11}=-C_{f12}^T$ 代入上式：$\boxed{S_{f11}=B_{\text{树}}^{-1}B_{\text{余}}}$
+
+\textbf{小结}：只需算 $B_{\text{树}}^{-1}B_{\text{余}}$（$(n-1)\times(m-n+1)$），转置取负得 $C_{f12}$，直接就是 $S_{f11}$。
+
+\textbf{秩}：回路空间维数$=m-n+1$，割集空间维数$=n-1$。$BC_e^T=0$（关联与回路正交），$S_eC_e^T=0$（割集与回路正交）。
+
+% ==================== 9. MST与Huffman ====================
+\section*{9. MST与Huffman树}
+
+\textbf{Prim}：任选起点，每次选连接 $V'$ 与 $V\setminus V'$ 的最短边。$O(n^2)$，适合稠密图。
+
+\textbf{Kruskal}：边按权排序 + 并查集。$O(m\log m)$，适合稀疏图。优化：按秩合并 + 路径压缩 → 均摊 $O(\alpha(n))$。
+二者皆贪心，均得MST（最优子结构 + 贪心选择性质）。
+
+\textbf{Huffman树}：最优二叉树，用于构造最佳前缀码。
+
+\textbf{构造算法}：初始所有叶子各为一棵树，权 $w_i$。每次选两个权\textbf{最小}的根节点合并，新根权 = 两子根权之和。重复直到只剩一棵树。$O(n\log n)$。
+
+\textbf{两个关键值，别搞混！}：
+\begin{itemize}
+\item \textbf{WPL（带权路径长度）} $=\sum w_i\cdot l_i$：每个\textbf{叶子}的权×该叶子到根的边数，求和。这是 Huffman 要最小化的目标。
+\item \textbf{根节点的权} $=\sum w_i$：根的值永远是所有叶子权之和，跟树的形状无关！
+\end{itemize}
+例：叶子权 $\{2,3,4,5\}$。合并2+3=5→剩下$\{4,5,5\}$；合并4+5=9→剩下$\{5,9\}$；合并5+9=14→根权14。WPL=$2\times3+3\times3+4\times2+5\times2=33$。
+
+最佳前缀码不唯一（等权时选法不唯一、左右孩子可互换）。
 
 % ==================== 10. 平面图 ====================
 \section*{10. 平面图与对偶图}
@@ -255,7 +322,8 @@ Jordan曲线：平面被简单闭曲线分为内部和外部。连接内外必�
 \textbf{Euler公式}：连通平面图 $n-m+r=2$。$k$ 个连通支：$n-m+r=k+1$。
 所有面次数之和 $=2m$。
 
-\textbf{推论}（简单连通平面图，$n\geq 3$）：$m\leq 3n-6$，$r\leq 2n-4$。
+\textbf{推论1}（简单连通平面图，$n\geq 3$）：$m\leq 3n-6$，$r\leq 2n-4$。
+\textbf{推论2}：设简单连通平面图没有割边，且每个域的边界数至少为t，则$m \leq \frac{t(n -2)}{t - 2}$
 不含 $K_3$ 子图（如二分图）：$m\leq 2n-4$。\textbf{$\delta(G)\leq 5$}。
 
 \textbf{易错}：$m\leq 3n-6$ 的适用条件是 $n\geq 3$ 的简单平面图。树（$m=n-1$）不违反此式（$n-1\leq 3n-6$ 当 $n\geq 2.5$）。
@@ -266,7 +334,7 @@ Jordan曲线：平面被简单闭曲线分为内部和外部。连接内外必�
 
 \textbf{Kuratowski定理}：(1) 平面图 $\iff$ 不含与 $K_5$ 或 $K_{3,3}$ 同胚的子图；(2) 平面图 $\iff$ 没有可收缩到 $K_5/K_{3,3}$ 的子图。
 
-\textbf{同胚}：反复插入/消去2度顶点可互化。\textbf{边收缩}：删 $e=(u,v)$，合并 $u,v$。
+\textbf{同胚}：反复插入/消去2度顶点可互化。\textbf{边收缩}：删 $e=(u,v)$，合并 $u,v$，增加新的顶点$w$，使$w$关联除$e$外的$u, v$关联的一切边。
 
 \textbf{对偶图} $G^*$：面变点，跨公共边界连边。$G$ 连通 $\implies$ $G^{**}\cong G$。$n^*=r,m^*=m,r^*=n$。$d_{G^*}(v_i^*)=\deg(R_i)$。
 
@@ -282,17 +350,18 @@ Jordan曲线：平面被简单闭曲线分为内部和外部。连接内外必�
 \textbf{点色数} $\gamma(G)$：最少颜色数使相邻点不同色。$k$-可着色 $\iff$ 点可划分为 $k$ 个独立集。
 $\gamma(G)=1\iff$ 零图；$\gamma(K_n)=n$；$\gamma=2\iff$ 二分图 $\iff$ 无奇回路（定理4.5.1）。
 
-\textbf{上界}：$\gamma(G)\leq\Delta(G)+1$（贪心）。
+\textbf{上界}：$\gamma(G)\leq\Delta(G)+1$（贪心），其中 $\Delta(G)$ 是最大度数。$\gamma(G)\leq\chi'(G)$（点色数不超过边色数）。
 \textbf{Brooks}：$G$ 非完全图、非奇圈 $\implies \gamma(G)\leq\Delta(G)$。
 \textbf{四色定理}：平面图 $\gamma\leq 4$。\textbf{五色定理}：平面图 $\gamma\leq 5$（归纳+$\delta\leq5$）。
 
 \textbf{特例}：奇阶轮图 $\gamma=3$；偶阶轮图 $\gamma=4$。树 $\gamma=2$。$K_n-e$ 的 $\gamma=n-1$。
 
 \textbf{Welch-Powell}（近似）：按度降序，贪心用最小可用色。不保证最优。
+\textbf{精确求解}：加边+收缩，等效于枚举两点同色/异色，取两种方案的最小值。
 
-\textbf{色数多项式} $f(G,t)$：至多 $t$ 种色的着色方案数。
+\textbf{色数多项式} $f(G,t)$：至多 $t$ 种色的着色方案数，化归到完全图利用公式来算，几个完全图就乘以几份。
 $f(K_n,t)=t(t-1)\cdots(t-n+1)$；$f(T_n,t)=t(t-1)^{n-1}$。
-不相邻 $i,j$：$f(G,t)=f(G+e_{ij},t)+f(G\circ e_{ij},t)$（加边+收缩）。
+不相邻 $i,j$：$f(G,t)=f(G+e_{ij},t)+f(G\circ e_{ij},t)$。
 
 \textbf{边色数} $\gamma'(G)$：相邻边不同色的最少颜色数。
 \textbf{Vizing}：$\Delta(G)\leq\gamma'(G)\leq\Delta(G)+1$（简单图）。
@@ -304,27 +373,41 @@ $\gamma'(K_n)=n$（$n$ 奇），$=n-1$（$n$ 偶）。$\gamma'(W_n)=n-1$（$n\ge
 % ==================== 12. 匹配 ====================
 \section*{12. 匹配}
 
-\textbf{匹配} $M$：无边共享顶点。极大：不能加边。最大：边数最多。完美：覆盖所有点。
-\textbf{增广路}：两端非饱和的交互路。$M\oplus P$ 使匹配数+1。
+\textbf{匹配} $M$：边子集，任两边不共享顶点。
 
-\textbf{Berge定理}：$M$ 是最大匹配 $\iff$ 无关于 $M$ 的增广路。
+\textbf{基本概念}：
+\begin{itemize}
+\item \textbf{饱和点}：被 $M$ 中某条边覆盖的顶点。\textbf{非饱和点}：未被 $M$ 覆盖的顶点。
+\item 极大匹配：不能再加边（不是最大）。最大匹配：边数最多。完美匹配：所有顶点都饱和。
+\item \textbf{增广路} $P$：起点和终点都是\textbf{非饱和点}，路上边交替属于/不属于 $M$。将路上边"翻转"（属$M$的删、不属$M$的加）得 $M\oplus P$，匹配数$+1$。
+\item 完全匹配：匹配数=二分图左右集合大小最小者。完美匹配：二分图左右集合大小相等且匹配数=大小。
+\end{itemize}
 
-\textbf{Hall婚姻定理}（二分图 $X,Y$）：存在饱和 $X$ 的匹配 $\iff$ $\forall S\subseteq X,|N(S)|\geq|S|$（相异性条件）。
+\textbf{Berge定理}：$M$ 是最大匹配 $\iff$ 不存在关于 $M$ 的增广路。
 
-\textbf{$k$条件}（推论5.2.1）：$X$ 中每点度 $\geq k$，$Y$ 中每点度 $\leq k\implies$ 存在 $X$ 的完全匹配。\textbf{易错}：满足相异性不一定满足 $k$ 条件，反之可推。
+\textbf{Hall婚姻定理}（二分图 $G=(X,Y)$）：存在饱和 $X$ 所有顶点的匹配 $\iff$ 每一侧集合任意子集的邻居数不少于自身大小（\textbf{相异性条件}）。即 $\forall A\subseteq X,|N(A)|\geq|A|$。其中 $N(A)$ 是 $A$ 的邻居集。
 
-\textbf{匈牙利算法}：深搜/广搜找增广路。$O(mn)$。标号：0未搜索、1饱和、2无法扩大。
+\textbf{$k$条件}（Hall推论）：若 $X$ 每点度 $\geq k$，$Y$ 每点度 $\leq k$，则存在饱和 $X$ 的匹配。注意：$k$条件 $\Rightarrow$ 相异性，反之不一定。
 
-\textbf{Kőnig定理}（二分图）：最大匹配数 = 最小点覆盖数。
+\subsection*{匈牙利算法（二分图最大匹配，$O(mn)$）}
 
-\textbf{一般图}：$\alpha(G)+\beta(G)=n$（独立数+点覆盖数）。
-\textbf{Tutte定理}（完美匹配）：$\forall S\subseteq V,o(G-S)\leq|S|$。
+\textbf{目标}：求二分图的最大匹配。
 
-\textbf{最大匹配数} $=|X|-\delta(G)$，$\delta(G)=\max_{A\subseteq X}(|A|-|N(A)|)$。
+\textbf{步骤}（从空匹配或任意匹配出发）：
+\begin{enumerate}[nosep,leftmargin=*]
+\item 从 $X$ 部取一个未饱和点 $x$，开始生长以 $x$ 为根的\textbf{交错树}。
+\item 从 $x$ 出发，沿"非匹配边→匹配边→非匹配边→…"交替走。$X$ 部点走非匹配边到 $Y$，$Y$ 部点必须走匹配边回 $X$。
+\item 若走到 $Y$ 部的一个\textbf{非饱和点}：找到一条增广路！翻转路上所有边的匹配状态（$M\leftarrow M\oplus P$）。返回步骤1。
+\item 若以 $x$ 为根的交错树已无法扩展且未找到增广路：标记 $x$ 为"已检查"，换下一个 $X$ 部非饱和点返回步骤1。
+\item $X$ 部所有非饱和点都检查完：当前 $M$ 即最大匹配。
+\end{enumerate}
 
-\textbf{KM算法}（最佳匹配）：可行顶标+相等子图，匈牙利找完美匹配→调整顶标。$O(n^3)$。
+\textbf{Kőnig定理}：二分图中，\textbf{最大匹配边数 = 最小点覆盖顶点数}。
+最小点覆盖：顶点子集，使每条边至少有一个端点在其中，邻接矩阵上体现为不在同行同列的非零元的最多个数。
 
-\textbf{$k$-正则二分图}可分解为 $k$ 个完美匹配。
+\textbf{最大匹配数公式}：对二分图，最大匹配数 $=|X|-\max_{A\subseteq X}(|A|-|N(A)|)$。
+
+\textbf{应用}：对棋盘放置问题可以把行、列看作二分图的两侧，棋盘上每个可放置点为一条边。最大匹配数即为最多可放置的棋子数。
 
 % ==================== 13. 网络流 ====================
 \section*{13. 网络流}
@@ -348,99 +431,232 @@ $t$ 标号→增流 $\delta_t$，否则当前最大。
 
 \textbf{Edmonds-Karp}：BFS找最短增广路，$O(nm^2)$。
 
-\textbf{FF算法问题}：DFS找增广路可能每次只增1，复杂度与容量有关。
+\textbf{FF注意}：DFS找增广路可能每次只增1，复杂度与容量值有关（不是多项式）。Edmonds-Karp改用BFS保证多项式时间。
 
-\textbf{最小费用流}：以费用为边权找最短增广路，沿路增流。
+\textbf{多源多汇}：加超源 $s_0$ 连各源（容量$=\infty$或各自供应量），超汇 $t_0$ 连各汇（容量$=\infty$或各自需求量）。
 
-\textbf{多源多汇}：加超源 $s_0$ 连各源（容量=源供应量），超汇 $t_0$ 连各汇（容量=汇需求量）。
+\textbf{经典应用}：二分图最大匹配 $\to$ 最大流（$X$ 部连 $s$，$Y$ 部连 $t$，容量均为1）。节点容量限制 $\to$ 拆点（$v_{\text{in}}\to v_{\text{out}}$，边上设容量）。
 
-\textbf{应用}：二分图最大匹配→最大流；任务分配→最小费用流；逃生路线→节点容量转边容量。
+\textbf{不考}：最小费用流。
 
 % ==================== 14. 代数结构 ====================
-\section*{14. 代数结构}
+\section*{14. 代数结构基础}
 
-\textbf{代数系统} $(A,f_1,\ldots,f_k)$：非空集+运算。\textbf{封闭性}是前提。
+\textbf{代数系统} = 非空集 + 封闭运算。逐步加运算律得到各类结构：
 
-\textbf{运算律}：结合律 $(ab)c=a(bc)$、交换律 $ab=ba$、幂等律 $aa=a$、分配律、吸收律、消去律（$ab=ac\land a\neq\theta\Rightarrow b=c$）。
+半群 $\triangleq$ 结合律；幺群 $\triangleq$ 半群 + 单位元；群 $\triangleq$ 幺群 + 每元有逆元。
+Abel群 $\triangleq$ 群 + 交换律。
 
-\textbf{单位元} $e$：$ea=ae=a$。若左右均存在则唯一。\textbf{零元} $\theta$：$\theta a=a\theta=\theta$。
+\textbf{特殊元素}：单位元 $e$（$ea=ae=a$），零元 $\theta$（$\theta a=a\theta=\theta$），逆元 $a^{-1}$（$a^{-1}a=aa^{-1}=e$）。结合律下左右逆元均存在则唯一，$(ab)^{-1}=b^{-1}a^{-1}$。
 
-\textbf{逆元} $a^{-1}$：$aa^{-1}=a^{-1}a=e$。结合律成立时，左右逆元均存在则唯一，$(a^{-1})^{-1}=a$。
+\textbf{同态} $\varphi(a\circ b)=\varphi(a)*\varphi(b)$。满同态保持结合律、交换律、单位元、逆元、零元。
 
-\textbf{同态} $\varphi:(A,\circ)\to(B,*)$：$\varphi(a\circ b)=\varphi(a)*\varphi(b)$。
-单同态（单射）、满同态（满射）、同构（双射）。
+\textbf{定理7.1.2（映射可逆性）}：
+$f$ \textbf{左可逆} $\triangleq\exists g$ 使 $g\circ f=\mathrm{id}_A$ $\iff f$ 单射。
+$f$ \textbf{右可逆} $\triangleq\exists g$ 使 $f\circ g=\mathrm{id}_B$ $\iff f$ 满射。
+$f$ 可逆 $\iff$ 双射 $\iff$ 既有左逆又有右逆。
 
-\textbf{满同态保持}：结合律、交换律、单位元、逆元——这些性质在满同态象中保持不变。
-
-\textbf{定理7.1.2}：$f$ 左可逆 $\iff f$ 为单射；$f$ 右可逆 $\iff f$ 为满射。可逆映射 $\iff$ 双射。
-
-\textbf{等价关系}：自反+对称+传递→确定划分。商集 $A/{\sim}$ = 等价类集合。自然映射为满射。
+\textbf{等价关系}：自反+对称+传递 $\to$ 划分。商集 $A/{\sim}=$ 等价类集合。自然映射 $\nu$ 为满射。
+\textbf{同余关系}：等价关系+代换性质（$a\sim b\Rightarrow ac\sim bc,ca\sim cb$），可定义商代数。
 
 % ==================== 15. 群 ====================
 \section*{15. 群论基础}
 
 \textbf{层次}：半群（结合律）$\subset$ 幺群（+单位元）$\subset$ 群（+逆元）。
 
-\textbf{群}：半群+单位元+每元可逆。等价：半群有左单位元+每元有左逆元。$\forall a,b$，$ax=b$ 和 $ya=b$ 解唯一。
+\textbf{半群} $(S,\cdot)$：结合律。\textbf{有限半群必存在幂等元} $a=a^2$（鸽巢原理）。无限半群不一定（反例 $(\mathbb{N}^+,+)$）。
+
+\textbf{幺群}：半群+单位元 $e$。
+
+\textbf{群}：幺群+每元有逆元。等价定义（半群条件）：
+\begin{itemize}
+\item 存在左单位元 $e$：$ea=a$（$\forall a$）
+\item 每元有左逆元：$\forall a,\exists a^{-1}$ 使 $a^{-1}a=e$
+\end{itemize}
+则 $(G,\cdot)$ 为群（左右自动成立）。\textbf{方程解唯一}：$\forall a,b$，$ax=b$ 和 $ya=b$ 在群中解唯一。
 
 \textbf{交换群（Abel）}：$ab=ba$。
 
-\textbf{阶}：$|G|$（群阶），$o(a)$（元素阶）：最小正整 $n$ 使 $a^n=e$。
-性质：$a^k=e\iff o(a)\mid k$；$o(a)=o(a^{-1})$；$o(a)\leq|G|$；$o(b^{-1}ab)=o(a)$；$o(ab)=o(ba)$。
+\textbf{消去律与群}：\textbf{有限半群+消去律 $\implies$ 群}。无限不一定（反例 $(\mathbb{N}^+,\times)$ 有消去律但不是群）。
 
-\textbf{易错}：有限群所有元素阶有限（√）。元素阶均有限 $\not\Rightarrow$ 有限群（反例 $(P(\mathbb{N}),\oplus)$ 无限但每元阶为2）。无限群元素阶也可有限（如 $(P(\mathbb{N}),\oplus)$），也可除单位元外全无限（如 $(\mathbb{Z},+)$），也可除两元外全无限（如 $(\mathbb{Q}^*,\times)$ 中 $\pm1$ 阶有限）。
+\textbf{子群判定} $H\leq G$（充要）：$\forall a,b\in H,ab^{-1}\in H$（且 $H\neq\emptyset$）。
+子群交仍是子群。两个真子群的并可能不是子群（但三个可以，如Klein四元群）。
 
-\textbf{消去律与群}：有限半群+消去律 $\implies$ 群。无限不一定（反例 $(\mathbb{N}^+,\times)$）。
-
-\textbf{子群判定}：$H\leq G\iff\forall a,b\in H,ab^{-1}\in H$（且 $H\neq\emptyset$）。
-子群交仍是子群。两个真子群的并不能构成群（三个可以，如Klein四元群）。
-
-\textbf{循环群}：$G=\langle a\rangle=\{a^n\mid n\in\mathbb{Z}\}$。由生成元唯一确定。必为Abel群。
-
-\textbf{生成元}：$o(a)=\infty$ 时仅有 $a,a^{-1}$ 两个生成元。$o(a)=n$ 时有 $\varphi(n)$ 个生成元（$\varphi$ 为欧拉函数：小于 $n$ 且与 $n$ 互素的正整数个数）。$a^k$ 是生成元 $\iff\gcd(k,n)=1$。
-
-\textbf{子群}：循环群的子群也是循环群。无限循环群的非平凡子群也是无限循环群。$n$ 阶循环群：对每个 $d\mid n$，恰有一个 $d$ 阶子群 $\langle a^{n/d}\rangle$，$|H|=n/d$ 其中 $d$ 为生成元的最小正幂指数。
-
-\textbf{同构}：$o(a)=\infty\implies G\cong(\mathbb{Z},+)$；$o(a)=n\implies G\cong(\mathbb{Z}_n,+)$。同阶循环群彼此同构。
-
-\textbf{陪集} $aH=\{ah\mid h\in H\}$。$|aH|=|H|$，陪集构成 $G$ 的划分。
-\textbf{Lagrange}：$|H|\mid|G|$。$[G:H]=|G|/|H|$。推论：素数阶群必循环；$a^{|G|}=e$；$o(a)\mid|G|$。
-
-\textbf{正规子群} $H\trianglelefteq G$：$gH=Hg$（$\forall g$）。$\iff gHg^{-1}=H\iff\forall g,h,ghg^{-1}\in H$。
-商群 $G/H$：仅 $H\trianglelefteq G$ 时成群，运算 $(aH)(bH)=(ab)H$。
-
-\textbf{群同态} $\varphi:G\to H$：$\ker\varphi\trianglelefteq G$，$\operatorname{Im}\varphi\leq H$。$\varphi$ 单射 $\iff\ker\varphi=\{e\}$。
-\textbf{同态基本定理}：$G/\ker\varphi\cong\operatorname{Im}\varphi$。
-
-\section*{16. 循环群深化与置换群}
-
-\textbf{变换}：$A\to A$ 的映射。一一变换=双射变换。$E(A)$：$A$ 上所有一一变换关于乘法构成群。\textbf{变换群}=$E(A)$ 的子群。
-
-\textbf{置换}：有限集上的一一变换。$n$ 元置换共 $n!$ 个。$S_n$：$n$ 次对称群（所有 $n$ 元置换）。\textbf{置换群}=$S_n$ 的子群。
-
-\textbf{轮换} $(a_1 a_2\cdots a_k)$：循环移位。不相交的轮换可交换。$k$ 阶轮换的阶为 $k$。
-
-\textbf{定理 8.4.2}：任一 $n$ 元置换可唯一表示为不相交轮换的乘积。
-
-\textbf{对换}：长度为2的轮换 $(a_i a_j)$。任一轮换可分解为对换乘积（不唯一）：
-$(a_1 a_2\cdots a_k)=(a_1 a_2)(a_2 a_3)\cdots(a_{k-1}a_k)=(a_1 a_k)(a_1 a_{k-1})\cdots(a_1 a_2)$。
-
-\textbf{逆序数}：排列 $p_1 p_2\cdots p_n$ 中 $i<j$ 且 $p_i>p_j$ 的对数。对换个数奇偶=排列逆序数奇偶。
-\textbf{奇/偶置换}：表为对换需奇数个对换→奇置换；偶数个→偶置换。
+\textbf{阶}：
 \begin{itemize}
-\item 奇偶性复合=模2加法：偶=0，奇=1。偶×偶=偶(0+0=0)；奇×奇=偶(1+1=0)；奇×偶=奇(1+0=1)。逆同奇偶（0=-0, 1=-1 mod 2）。
-\item $\sigma$ 偶 $\iff\sigma^{-1}$ 偶（逆排列对换数相同）。$\tau$ 偶 $\iff\sigma^{-1}\tau\sigma$ 偶（共轭不变）。
-\item 轮换 $(a_1\cdots a_k)$ 是偶置换 $\iff k$ 为奇数（对换数为 $k-1$）。
+\item $|G|$ = 群阶（元素个数）；$o(a)$ = 元素阶：最小正整数 $n$ 使 $a^n=e$
+\item $a^k=e\iff o(a)\mid k$；$o(a)=o(a^{-1})$；$o(b^{-1}ab)=o(a)$；$o(ab)=o(ba)$
+\item 有限群中所有元素阶有限（√）。元素阶均有限 $\not\Rightarrow$ 有限群（反例 $(P(\mathbb{N}),\oplus)$ 无限，每元阶为2）
+\item 无限群元素阶可有限也可无限：$(\mathbb{Z},+)$ 除0外全无限；$(\mathbb{Q}^*,\times)$ 除 $\pm1$ 外全无限
 \end{itemize}
 
-\textbf{交错群} $A_n$：$S_n$ 中所有偶置换构成的子群。$|A_n|=n!/2$（$n\geq 2$）。
+\textbf{同构}：$G_1\cong G_2$ 若存在双射 $\varphi$ 保持运算。同构保持所有群论性质（阶、子群结构、正规性等）。
 
-\textbf{Cayley定理}：任意群同构于一个变换群。任意 $n$ 阶有限群同构于 $S_n$ 的某个子群。
-证明思路：$\forall a\in G$ 构造变换 $f_a:G\to G,x\mapsto ax$，$f_a$ 是双射（方程 $ax=b$ 解唯一）。$\{f_a\mid a\in G\}$ 成群，$a\mapsto f_a$ 为同构。
+\section*{16. 循环群·变换群·置换群}
 
-\textbf{Klein四元群}：$\{e,a,b,c\}$，$a^2=b^2=c^2=e$，任两非 $e$ 元乘积=第三个。Abel群。
+\subsection*{16a. 循环群深化}
 
-\textbf{易错}：有限集合上满射变换必为单射（双射）；无限集合不一定。置换表示成不相交轮换唯一，但表示成对换乘积不唯一（个数也不定，但奇偶性确定）。
+\textbf{循环群} $G=\langle a\rangle=\{a^n\mid n\in\mathbb{Z}\}$。由一个元素生成，必为Abel群。
+
+\textbf{生成元个数}：
+\begin{itemize}
+\item $o(a)=\infty$（无限循环群 $\cong(\mathbb{Z},+)$）：仅 $a,a^{-1}$ 两个生成元
+\item $o(a)=n$（$n$阶循环群 $\cong(\mathbb{Z}_n,+)$）：有 $\varphi(n)$ 个生成元
+\item $a^k$ 是生成元 $\iff\gcd(k,n)=1$（$\varphi(n)$ = 小于 $n$ 且与 $n$ 互素的正整数个数）
+\item $\varphi(1)=1,\varphi(p)=p-1,\varphi(pq)=(p-1)(q-1),\varphi(p^k)=p^k-p^{k-1}$
+\end{itemize}
+
+\textbf{子群}：循环群的子群必为循环群。无限循环群的非平凡子群也是无限循环群。
+$n$ 阶循环群：对每个正因子 $d\mid n$，\textbf{恰有一个} $d$ 阶子群 $\langle a^{n/d}\rangle$。
+例：$Z_{100}$ 子群→100的因子：1,2,4,5,10,20,25,50,100 阶各一。
+
+\textbf{同构}：$o(a)=\infty\Rightarrow G\cong(\mathbb{Z},+)$；$o(a)=n\Rightarrow G\cong(\mathbb{Z}_n,+)$。同阶循环群彼此同构。
+
+\subsection*{16b. 变换群与置换群}
+
+\textbf{变换}：$A\to A$ 的映射。一一变换=双射。$E(A)$：$A$上所有一一变换关于乘法构成群。
+\textbf{变换群} = $E(A)$ 的子群。
+
+\textbf{置换}：有限集上的一一变换。$S_n$：$n$次对称群（$|S_n|=n!$）。\textbf{置换群} = $S_n$ 的子群。
+
+\textbf{轮换} $(a_1a_2\cdots a_k)$：循环移位。$k$-轮换的阶为 $k$。不相交轮换可交换。
+
+\textbf{定理8.4.2}：任一 $n$ 元置换可\textbf{唯一}表示为不相交轮换的乘积。
+
+\textbf{对换分解}（不唯一）：
+$(a_1a_2\cdots a_k)=(a_1a_2)(a_2a_3)\cdots(a_{k-1}a_k)=(a_1a_k)(a_1a_{k-1})\cdots(a_1a_2)$
+
+\textbf{奇偶性}：
+\begin{itemize}
+\item 对换个数的奇偶性=排列逆序数的奇偶性，是置换的不变量
+\item 偶置换（对换偶数个），奇置换（对换奇数个）。奇偶性复合=模2加法（偶=0,奇=1）
+\item $\sigma$ 偶 $\iff\sigma^{-1}$ 偶；$\tau$ 偶 $\iff\sigma^{-1}\tau\sigma$ 偶（共轭不改变奇偶性）
+\item 轮换 $(a_1\cdots a_k)$ 偶 $\iff k$ 为奇数（因对换数 $=k-1$）
+\end{itemize}
+
+\textbf{交错群} $A_n$：$S_n$ 中所有偶置换。$|A_n|=n!/2$（$n\geq 2$）。$A_n\trianglelefteq S_n$。
+
+\textbf{Cayley定理}：任意群同构于一个变换群；任意 $n$ 阶有限群同构于 $S_n$ 的某个子群。
+构造：$\forall a\in G$，$f_a:G\to G,x\mapsto ax$ 为双射，$\{f_a\mid a\in G\}\leq E(G)$，$a\mapsto f_a$ 为同构。
+
+\textbf{Klein四元群} $K_4=\{e,a,b,c\}$：$a^2=b^2=c^2=e$，任两非$e$元乘积=第三个。Abel群，非循环（无4阶元）。
+
+\textbf{易错}：有限集合上满射变换必为单射（双射）；无限集合不一定！置换的不相交轮换表示唯一，但对换表示不唯一（个数和选择均不唯一，但奇偶性唯一确定）。
+
+% ==================== 17. 陪集与Lagrange定理 ====================
+\section*{17. 陪集与Lagrange定理（8.5）}
+
+\subsection*{17a. 陪集基本概念}
+
+\textbf{左陪集} $aH=\{ah\mid h\in H\}$，\textbf{右陪集} $Ha=\{ha\mid h\in H\}$。
+一般 $aH\neq Ha$（除非 $H$ 正规）。
+
+\textbf{核心例子}：$G=(\mathbb{Z},+)$，$H=$ 偶数集（正规子群）。$aRb\iff ab^{-1}=a-b\in H$（即 $a-b$ 为偶数），等价类=奇偶两类。
+陪集：$0+H=$ 偶数集 $=H$（是子群，含单位元0）；$1+H=$ 奇数集（\textbf{不是群}，无单位元）。奇数和偶数各自内部差为偶数。
+
+\textbf{陪集的6条性质}（以左陪集为例）：
+\begin{enumerate}[nosep,leftmargin=*]
+\item $eH=H$，$a\in aH$（因 $e\in H$）
+\item $|aH|=|H|$（由消去律，$ah_1=ah_2\Rightarrow h_1=h_2$）
+\item $a\in H\iff aH=H$（子群中元素与子群作用不改变子群）
+\item $\forall b\in aH$，有 $bH=aH$（陪集中任一元素可作代表元）$\implies$ 同一陪集的所有代表元等价
+\item $aH=bH\iff b\in aH\iff a^{-1}b\in H$
+\item $aH\neq bH\Rightarrow aH\cap bH=\varnothing$（两陪集要么相等，要么不相交）
+\end{enumerate}
+
+\textbf{陪集基本运算}：$hH=H$（$\forall h\in H$）；$HH=\{h_1h_2\mid h_1,h_2\in H\}=H$。
+$H$ 是 $G/H$ 的单位元（即陪集 $eH$）。
+
+\textbf{群的陪集分解}：$G=a_1H\cup a_2H\cup\cdots\cup a_kH$（互不相交的并），$a_i$ 称为陪集代表。
+等价关系 $aRb\iff a^{-1}b\in H$ 将 $G$ 划分为左陪集。
+
+\textbf{指数} $[G:H]=$ 子群 $H$ 的不同左陪集个数 $=$ 不同右陪集个数。
+
+\subsection*{17b. Lagrange定理}
+
+\textbf{Lagrange定理}：$|G|=[G:H]\cdot|H|$，即 \textbf{$|H|$ 整除 $|G|$}。子群的阶必为群阶的因子。
+
+\textbf{推论1}：$\forall a\in G$，$o(a)\mid|G|$，且 $a^{|G|}=e$。元素的阶必为群阶的因子。
+
+\textbf{推论2}：\textbf{素数阶群必为循环群}。证：取非单位元 $a$，$\langle a\rangle$ 的阶 $=p$（只能为1或$p$），故 $G=\langle a\rangle$。
+
+\textbf{推论3}：$A,B\leq G$（有限），$|AB|=\frac{|A|\cdot|B|}{|A\cap B|}$，其中 $AB=\{ab\mid a\in A,b\in B\}$。
+证：$AB=\bigcup_{a\in A}aB$，构造 $A/(A\cap B)$ 与陪集族之间双射。
+
+\textbf{重要应用}：6阶群必存在3阶子群（分情况：有6阶元→$\langle a^2\rangle$为3阶；有3阶元→直接；全为2阶元+单位→导出4阶子群→矛盾Lagrange）。
+
+\textbf{易错}：Lagrange定理的逆命题不成立！$|G|$ 有因子 $k$ 并不保证存在 $k$ 阶子群（反例 $A_4$，阶12，无6阶子群）。
+
+\subsection*{17c. Cauchy定理与Sylow定理（拓展·秒杀用）}
+
+\textbf{Cauchy定理}：$p$ 素数，若 $p\mid|G|$，则 $G$ 中存在 $p$ 阶元（从而有 $p$ 阶子群）。
+$\implies$ 6阶群：$2\mid 6,3\mid 6$，必存在2阶元和3阶元，秒得2阶和3阶子群。
+
+\textbf{Sylow $p$-子群}：设 $|G|=p^k\cdot m$（$p\nmid m$），$p^k$ 阶子群称为Sylow $p$-子群。
+
+\textbf{Sylow I（存在性）}：对每个 $p^k\mid|G|$，存在 $p^k$ 阶子群。
+特别地，\textbf{存在Sylow $p$-子群}（$p^k$阶）。$\implies$ Lagrange逆命题对素数幂成立！
+
+\textbf{Sylow II（共轭性）}：所有Sylow $p$-子群彼此共轭（即若 $P,Q$ 为Sylow $p$-子群，则 $\exists g\in G$ 使 $gPg^{-1}=Q$）。
+
+\textbf{Sylow III（个数）}：Sylow $p$-子群个数 $n_p$ 满足：
+\begin{itemize}
+\item $n_p\equiv 1\pmod{p}$（模$p$余1）
+\item $n_p\mid m$（$n_p$整除$m$，其中 $m=|G|/p^k$）
+\end{itemize}
+
+\textbf{秒杀套路}：若 $n_p=1$，则该Sylow $p$-子群\textbf{正规}（$n_p=1\Rightarrow P\trianglelefteq G$）。
+例：$|G|=6=2\times 3$，$n_3\equiv 1\pmod{3}$ 且 $n_3\mid 2\Rightarrow n_3=1\Rightarrow$ 3阶子群唯一且正规。
+$n_2\equiv 1\pmod{2}$ 且 $n_2\mid 3\Rightarrow n_2=1$ 或 $3$。
+
+% ==================== 18. 正规子群与商群 ====================
+\section*{18. 正规子群与商群（8.6）}
+
+\subsection*{18a. 正规子群}
+
+\textbf{定义}：$H\trianglelefteq G$（$H$ 是 $G$ 的正规子群）$\iff\forall g\in G,gH=Hg$。
+
+\textbf{【关键理解】}：$gH=Hg$ 是\textbf{集合相等}，不是逐元素相等！
+即 $\forall h\in H,\exists h'\in H$ 使 $gh=h'g$（两个 $h$ 可以不同），一般 $gh\neq hg$。
+Abel群中才保证 $gh=hg$（逐元素交换）。正规子群是集合层面的"交换"。
+
+\textbf{4个等价条件}（定理8.6.1，以下等价）：
+\begin{enumerate}[nosep,leftmargin=*]
+\item $H\trianglelefteq G$（$gH=Hg$）
+\item $\forall g\in G,\ gHg^{-1}=H$
+\item $\forall g\in G,\ gHg^{-1}\subseteq H$（只需证子集方向）
+\item $\forall g\in G,\forall h\in H,\ ghg^{-1}\in H$（检验条件：共轭仍在$H$中）
+\end{enumerate}
+
+\textbf{判断}：Abel群的任意子群都是正规子群。指数为2的子群必正规。$\{e\}$ 和 $G$ 总是正规子群。$A_n\trianglelefteq S_n$。
+
+\textbf{正规子群与子群的运算}（定理8.6.2）：
+\begin{itemize}
+\item $H\trianglelefteq G,K\trianglelefteq G\Rightarrow H\cap K\trianglelefteq G,\ HK\trianglelefteq G$
+\item $H\trianglelefteq G,K\leq G\Rightarrow H\cap K\trianglelefteq K,\ HK\leq G$
+\item 正规$\times$正规=正规；正规$\cap$正规=正规；正规$\times$普通=普通；正规$\cap$普通=普通的正规；普通$\times$普通=NA
+\end{itemize}
+
+\textbf{AB是子群的充要条件}：$A\leq G,B\leq G$，则 $AB\leq G\iff AB=BA$。
+
+\subsection*{18b. 商群}
+
+\textbf{商群}：$H\trianglelefteq G$ 时，$G/H=\{aH\mid a\in G\}$ 关于陪集乘法 $(aH)(bH)=(ab)H$ 构成群。
+单位元 $H$，$(aH)^{-1}=a^{-1}H$。$|G/H|=[G:H]$。
+
+\textbf{陪集乘法关键公式}：$\boxed{aH\cdot bH=abH}$。证明：$(aH)(bH)=\{ah_1bh_2\mid h_1,h_2\in H\}$，由正规性 $h_1b=bh_1'$，故 $ah_1bh_2=abh_1'h_2\in abH$；反之 $abh=a(e)b(h)\in aHbH$。
+
+\textbf{例}：$G=(\mathbb{Z},+),H=m\mathbb{Z}\trianglelefteq G$，则 $G/H\cong(\mathbb{Z}_m,+)$。
+
+\textbf{换位子群}：$H=\langle aba^{-1}b^{-1}\mid a,b\in G\rangle$（所有换位子生成的子群）。
+性质：
+\begin{enumerate}[nosep,leftmargin=*]
+\item $H\trianglelefteq G$。证：$\forall g\in G$，$g(aba^{-1}b^{-1})g^{-1}=(gag^{-1})(gbg^{-1})(gag^{-1})^{-1}(gbg^{-1})^{-1}\in H$
+\item $G/H$ 是交换群。证：$\forall a,b\in G$，$aH\cdot bH=abH$，$bH\cdot aH=baH$。由 $a^{-1}b^{-1}ab\in H$，有 $ab=ba(a^{-1}b^{-1}ab)$，故 $abH=ba(a^{-1}b^{-1}ab)H=baH$（因换位子 $\in H$，而 $hH=H$），即 $aH\cdot bH=bH\cdot aH$
+\item 更一般地，$G/N$ 交换 $\iff H\subseteq N$（$H$ 是换位子群，$N\trianglelefteq G$）
+\end{enumerate}
+
+\textbf{注意}：8.7（群的同态基本定理）和8.8（群的直积）不考。
 
 \vfill
 \hrule
